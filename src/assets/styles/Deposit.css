@@ -1,0 +1,45 @@
+/* Áp dụng chung cho container */
+.deposit-container {
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    padding: 24px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Các nút chọn tiền */
+  .amount-button {
+    border-radius: 12px !important;
+    height: 48px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+  
+  /* Phần lựa chọn phương thức thanh toán */
+  .payment-method {
+    border: 2px solid #f1f1f1;
+    border-radius: 8px;
+    padding: 8px;
+    transition: all 0.2s;
+  }
+  
+  .payment-method.selected {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+  }
+  
+  .payment-method img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+  }
+  
+  /* Phần chi tiết giao dịch */
+  .transaction-details {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 14px;
+    background-color: #f8f9fa;
+  }
+  

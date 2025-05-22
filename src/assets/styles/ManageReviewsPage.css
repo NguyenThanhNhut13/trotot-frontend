@@ -1,0 +1,27 @@
+.manage-reviews-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.manage-reviews-page h2 {
+  font-weight: 600;
+  color: #007bff;
+}
+
+.manage-reviews-page .card {
+  transition: transform 0.2s;
+}
+
+.manage-reviews-page .card:hover {
+  transform: scale(1.05);
+}
+
+.manage-reviews-page .table th,
+.manage-reviews-page .table td {
+  vertical-align: middle;
+}
+
+.manage-reviews-page .table th {
+  background-color: #f8f9fa;
+  color: #333;
+}

@@ -1,0 +1,31 @@
+.notification-tabs .nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+}
+
+.notification-tabs .nav-link {
+  border: none;
+  color: #495057;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  margin-right: 1rem;
+  cursor: pointer;
+}
+
+.notification-tabs .nav-link.active {
+  color: #0d6efd;
+  border-bottom: 3px solid #0d6efd;
+  background-color: transparent;
+}
+
+.notification-tabs .nav-link:hover:not(.active) {
+  border-bottom: 3px solid #dee2e6;
+}
+
+.notification-content {
+  min-height: 400px;
+  border-radius: 0.5rem;
+}
+
+.empty-notification-image {
+  opacity: 0.7;
+}

@@ -1,0 +1,27 @@
+.history-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.history-page h2 {
+  font-weight: 600;
+  color: #007bff;
+}
+
+.history-page .card {
+  transition: transform 0.2s;
+}
+
+.history-page .card:hover {
+  transform: scale(1.05);
+}
+
+.history-page .table th,
+.history-page .table td {
+  vertical-align: middle;
+}
+
+.history-page .table th {
+  background-color: #f8f9fa;
+  color: #333;
+}

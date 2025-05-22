@@ -1,0 +1,57 @@
+.empty-reviews-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  margin: 20px 0;
+  padding: 60px 20px;
+}
+
+.empty-review-image {
+  display: block;
+  margin: 0 auto;
+  max-width: 250px;
+  opacity: 0.8;
+}
+
+.review-card {
+  transition: all 0.2s;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.review-card:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.review-actions button {
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.review-comment {
+  white-space: pre-line;
+  color: #333;
+}
+
+.star-rating {
+  cursor: pointer;
+}
+
+/* Animation for loading spinner */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.spinner-border {
+  animation: spin 1s linear infinite;
+}
