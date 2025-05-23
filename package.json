@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",
+    "@reduxjs/toolkit": "^2.8.2",
     "@tanstack/react-query": "^5.74.3",
     "@tensorflow-models/coco-ssd": "^2.2.3",
     "@tensorflow/tfjs": "^4.22.0",
@@ -27,6 +28,7 @@
     "react-hook-form": "^7.55.0",
     "react-icons": "^4.12.0",
     "react-leaflet": "^5.0.0",
+    "react-redux": "^9.2.0",
     "react-router-dom": "^7.5.1",
     "react-scripts": "5.0.1",
     "react-slick": "^0.30.3",

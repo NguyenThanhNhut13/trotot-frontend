@@ -18,6 +18,10 @@ import ChangePasswordModal from "./ChangePasswordModal";
 import RegisterModal from "../Register/RegisterModal";
 import OTPModal from "../Register/OTPModal";
 
+import { useAppDispatch } from '../../store/hooks';
+import { login } from '../../store/slices/authSlice';
+import { getProfile } from '../../store/slices/userSlice';
+
 type FormData = Pick<LoginSchema, "credential" | "password">;
 const loginSchemaPick = loginSchema.pick(["credential", "password"]);
 
@@ -48,51 +52,70 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
     mutationFn: (body: FormData) => authApi.login(body),
   });
 
-  const onSubmit = handleSubmit((data) => {
+  // const onSubmit = handleSubmit((data) => {
+  //   setIsLoading(true);
+  //   const requestBody = {
+  //     credential: data.credential,
+  //     password: data.password,
+  //   };
+
+  //   loginMutation.mutate(requestBody, {
+  //     onSuccess: async (data) => {
+  //       const timer = setTimeout(async () => {
+  //         try {
+  //           const profileRes = await userApi.getProfile();
+  //           console.log("Profile:", profileRes.data);
+  //           window.location.reload();
+  //         } catch (err) {
+  //           console.error(err);
+  //         }
+  //       }, 3000);
+
+  //       setIsAuthenticated(true);
+  //       handleClose();
+  //     },
+  //     onError: (error: any) => {
+  //       setIsLoading(false); // Đảm bảo isLoading được đặt lại
+  //       if (isAxiosUnprocessableEntityError<ErrorResponse<FormData>>(error)) {
+  //         const formError = error.response?.data.data;
+  //         if (formError) {
+  //           Object.keys(formError).forEach((key) => {
+  //             setError(key as keyof FormData, {
+  //               message: formError[key as keyof FormData],
+  //               type: "Server",
+  //             });
+  //           });
+  //         } else {
+  //           // Hiển thị thông báo lỗi chung (ví dụ: "You are already logged in")
+  //           toast.error(
+  //             error.response?.data?.message ||
+  //               "Đăng nhập thất bại. Vui lòng thử lại!"
+  //           );
+  //         }
+  //       } else {
+  //         toast.error("Có lỗi xảy ra. Vui lòng thử lại sau!");
+  //       }
+  //     },
+  //   });
+  // });
+
+  const onSubmit = handleSubmit(async (data) => {
     setIsLoading(true);
     const requestBody = {
       credential: data.credential,
       password: data.password,
     };
 
-    loginMutation.mutate(requestBody, {
-      onSuccess: async (data) => {
-        const timer = setTimeout(async () => {
-          try {
-            const profileRes = await userApi.getProfile();
-            console.log("Profile:", profileRes.data);
-            window.location.reload();
-          } catch (err) {
-            console.error(err);
-          }
-        }, 3000);
-
-        setIsAuthenticated(true);
-        handleClose();
-      },
-      onError: (error: any) => {
-        setIsLoading(false); // Đảm bảo isLoading được đặt lại
-        if (isAxiosUnprocessableEntityError<ErrorResponse<FormData>>(error)) {
-          const formError = error.response?.data.data;
-          if (formError) {
-            Object.keys(formError).forEach((key) => {
-              setError(key as keyof FormData, {
-                message: formError[key as keyof FormData],
-                type: "Server",
-              });
-            });
-          } else {
-            // Hiển thị thông báo lỗi chung (ví dụ: "You are already logged in")
-            toast.error(
-              error.response?.data?.message ||
-                "Đăng nhập thất bại. Vui lòng thử lại!"
-            );
-          }
-        } else {
-          toast.error("Có lỗi xảy ra. Vui lòng thử lại sau!");
-        }
-      },
-    });
+    try {
+      await dispatch(login(requestBody)).unwrap();
+      await dispatch(getProfile()).unwrap();
+      handleClose();
+      window.location.reload();
+    } catch (error) {
+      // Handle errors
+      setIsLoading(false);
+      console.error(error);
+    }
   });
 
   const togglePasswordVisibility = () => {

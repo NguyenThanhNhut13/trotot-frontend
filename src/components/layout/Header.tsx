@@ -15,6 +15,8 @@ import { useMutation } from "@tanstack/react-query";
 import { AppContext } from "../../contexts/app.context";
 import { FaBell, FaHeart } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { logout } from '../../store/slices/authSlice';
 
 const Header = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -22,6 +24,9 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
+  const dispatch = useAppDispatch();
+  const { isAuthenticated } = useAppSelector(state => state.auth);
+  const { profile } = useAppSelector(state => state.user);
 
   const { setIsAuthenticated, setProfile, profile } = useContext(AppContext)
 
@@ -39,12 +44,12 @@ const Header = () => {
   const handleLogout = () => {
     const refreshToken = localStorage.getItem("refreshToken");
     if (refreshToken) {
-      logoutMutation.mutate({ refreshToken });
+      dispatch(logout({ refreshToken }));
     }
     setTimeout(() => {
       window.location.reload()
-    }, 5000)
-  }
+    }, 5000);
+  };
 
   // Hàm kiểm tra đăng nhập trước khi cho đăng trọ
   const handlePostRoomClick = () => {
