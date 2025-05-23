@@ -34,6 +34,8 @@ import { toast } from "react-toastify";
 import RoomMap from "../../components/common/Map/RoomMap";
 import addressAPI from "../../apis/address.api";
 import { get, set } from "lodash";
+import { fallbackGeocode, getDefaultCoordinates } from "../../utils/geocodingFallback";
+
 
 export default function DetailRoom() {
   const { id } = useParams<{ id: string }>();
@@ -65,38 +67,83 @@ export default function DetailRoom() {
 
   // Fetch room details by ID
   useEffect(() => {
-    const fetchRoomDetails = async (attempt = 1) => {
-      if (!id) return;
-
-      setLoading(true);
-      setError(null);
+    const fetchRoomDetails = async () => {
       try {
-        const response = await roomApi.getRoomById(Number(id));
-        if (response?.data?.data) {
-          setRoom(response.data.data);
-
-          const address = response.data.data.address;
-          setAddress(
-            `${address.houseNumber}, ${address.street}, ${address.ward}, ${address.district}, ${address.province}`
-          );
-
-          const ifRenderMap = await addressAPI.getMapForward(`${address}`)
-          setLongitude(ifRenderMap.data.data.longitude);
-          setLatitude(ifRenderMap.data.data.latitude);
-
+        // Make sure id is a number
+        if (!id) return;
+        const roomId = parseInt(id);
+        
+        // Get room data
+        const roomResponse = await roomApi.getRoomById(roomId);
+        
+        // Extract the actual room data from the response
+        const roomData = roomResponse.data.data;
+        setRoom(roomData);
+        
+        // Handle address geocoding
+        if (roomData.address) {
+          // Create a proper address string for geocoding
+          const addressString = typeof roomData.address === 'object'
+            ? `${roomData.address.street || ''}, ${roomData.address.ward || ''}, ${roomData.address.district || ''}, ${roomData.address.province || ''}`
+            : roomData.address;
+            
+          try {
+            // First try with backend API
+            const geoResponse = await addressAPI.getMapForward(addressString);
+            const geoData = geoResponse.data.data;
+            
+            // Process the response
+            if (geoData) {
+              let coordinates;
+              
+              if (Array.isArray(geoData) && geoData.length > 0) {
+                coordinates = geoData[0];
+              } else if (typeof geoData === 'object') {
+                coordinates = geoData;
+              }
+              
+              if (coordinates && 'lat' in coordinates && 'lon' in coordinates) {
+                setLatitude(coordinates.lat);
+                setLongitude(coordinates.lon);
+                setAddress(addressString);
+              }
+            }
+          } catch (error) {
+            console.log("Backend geocoding failed, trying fallback...");
+            
+            try {
+              // Use fallback geocoding service
+              const fallbackResult = await fallbackGeocode(addressString);
+              
+              if (fallbackResult) {
+                setLatitude(fallbackResult.lat);
+                setLongitude(fallbackResult.lon);
+                setAddress(addressString);
+                console.log("Using fallback geocoding result");
+              } else {
+                // If all geocoding fails, use default coordinates based on city
+                const cityName = roomData.address.province || 'Đà Nẵng';
+                const defaultCoords = getDefaultCoordinates(cityName);
+                setLatitude(defaultCoords.lat);
+                setLongitude(defaultCoords.lon);
+                console.log("Using default city coordinates");
+              }
+            } catch (fallbackError) {
+              console.error("All geocoding methods failed:", fallbackError);
+              // Set default coordinates for Da Nang
+              setLatitude(16.0544);
+              setLongitude(108.2022);
+            }
+          }
         }
       } catch (error) {
         console.error("Error fetching room details:", error);
-        if (attempt <= maxRetries) {
-          const delay = 3000 + (attempt - 1) * 1000;
-          setTimeout(() => fetchRoomDetails(attempt + 1), delay);
-        } else {
-          setError("Không thể tải thông tin phòng. Vui lòng thử lại sau.");
-        }
+        setError("Không thể tải thông tin phòng. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
       }
     };
+    
     window.scrollTo({ top: 0, behavior: "smooth" });
     fetchRoomDetails();
   }, [id]);

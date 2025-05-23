@@ -4,12 +4,13 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "../../assets/styles/Deposit.css";
 import paymentAPI from "../../apis/payment.api";
 import { toast } from "react-toastify";
-import { AppContext } from "../../contexts/app.context";
+
+import { useAppSelector } from '../../store/hook';
 
 const DepositPage: React.FC = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(0);
   const [selectedMethod, setSelectedMethod] = useState<string>("vnpay");
-  const { profile } = useContext(AppContext);
+  const { profile } = useAppSelector(state => state.user);
 
   // Danh sách số tiền có thể chọn
   const amounts = [

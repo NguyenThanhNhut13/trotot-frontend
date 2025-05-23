@@ -2,9 +2,9 @@ import React, { useContext, useEffect, useState } from "react";
 import { Card, Button, Row, Col, Spinner } from "react-bootstrap";
 import roomApi from "../../apis/room.api"; // update path if needed
 import { Room } from "../../types/room.type"; // kiểu gốc từ API
-import { AppContext } from "../../contexts/app.context";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { toast } from "react-toastify";
+import { useAppSelector } from "../../store/hook";
 
 interface Listing {
   id: number;
@@ -36,7 +36,8 @@ const HotListings: React.FC<HotListingsProps> = ({
   const [retryCount, setRetryCount] = useState<number>(0);
   const maxRetries = 3; // Maximum retry attempts
   const [savedRoomIds, setSavedRoomIds] = useState<Set<number>>(new Set()); // Thêm state này
-  const { isAuthenticated } = useContext(AppContext);
+
+  const { isAuthenticated } = useAppSelector(state => state.auth);
 
   // Helper function to create dummy empty listings if count is less than 5
   const ensureMinimumItems = (listings: Listing[], minCount: number = 5) => {

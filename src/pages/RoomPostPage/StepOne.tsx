@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   Button,
@@ -14,7 +14,6 @@ import { useForm, Resolver } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { formCreateRoom, FormCreateRoomSchema } from "../../utils/rules";
 import { useMutation } from "@tanstack/react-query";
-import { AppContext } from "../../contexts/app.context";
 import roomApi from "../../apis/room.api";
 import mediaAPI from "../../apis/media.api";
 import {
@@ -39,7 +38,8 @@ import {
 } from "react-icons/fa";
 import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs";
-import { SiCommonworkflowlanguage } from "react-icons/si";
+// import { SiCommonworkflowlanguage } from "react-icons/si";
+import { useAppSelector } from "../../store/hook";
 
 type ImageFeedback = {
   url: string;
@@ -49,7 +49,7 @@ type ImageFeedback = {
 
 const StepOne = () => {
   const navigate = useNavigate();
-  const { profile } = useContext(AppContext);
+  const { profile } = useAppSelector(state => state.user);
   const [loading, setLoading] = useState(false);
   const [amenitiesList, setAmenitiesList] = useState<Amenity[]>([]);
   const [targetAudiencesList, setTargetAudiencesList] = useState<

@@ -12,7 +12,10 @@ import { ErrorResponse } from "../../types/utils.type";
 import authApi from "../../apis/auth.api";
 import { isAxiosUnprocessableEntityError } from "../../utils/utils";
 import OTPModal from "./OTPModal";
-import { AppContext } from "../../contexts/app.context";
+
+import { useAppDispatch } from "../../store/hook";
+import { login } from "../../store/slices/authSlice";
+import { getProfile } from "../../store/slices/userSlice";
 
 type RegisterModalProps = {
   show: boolean;
@@ -33,7 +36,8 @@ const registerSchema = schema.pick([
 ]);
 
 const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
-  const { setIsAuthenticated } = useContext(AppContext);
+   const dispatch = useAppDispatch();
+  
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -62,7 +66,6 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
         console.log("✅ Mutation success, variables:", variables);
         setCurrentCredential(variables.credential); //Dung cho xac thuc OTP
         setShowOtpModal(true);
-        setIsAuthenticated(true);
         setIsLoading(false);
       },
       onError: (error) => {
@@ -184,19 +187,21 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
 
           <div className="text-center" style={{ fontSize: "0.9rem" }}>
             Bằng cách tiếp tục, bạn đồng ý với{" "}
-            <a
-              href="#"
-              style={{ color: "#0046a8", textDecoration: "none" }}
+            <button 
+              type="button"
+              onClick={() => window.open('/terms', '_blank')}
+              style={{ color: "#0046a8", textDecoration: "none", background: "none", border: "none", padding: 0, cursor: "pointer" }}
             >
               Điều khoản & Cam kết
-            </a>{" "}
+            </button>
             của Trợ Mới và xác nhận rằng bạn đã đọc{" "}
-            <a
-              href="#"
-              style={{ color: "#0046a8", textDecoration: "none" }}
+            <button 
+              type="button"
+              onClick={() => window.open('/terms', '_blank')}
+              style={{ color: "#0046a8", textDecoration: "none", background: "none", border: "none", padding: 0, cursor: "pointer" }}
             >
               Chính sách bảo mật
-            </a>{" "}
+            </button>
             của chúng tôi.
           </div>
         </Modal.Body>

@@ -6,6 +6,11 @@ import http from '../utils/http';
 import { Address } from '../types/address.type'
 import { get } from "lodash";
 
+interface Coordinates {
+  lat: number;
+  lon: number;
+}
+
 // External API URLs
 export const URL_GET_PROVINCES =
   "provinces/getAll";
@@ -83,3 +88,39 @@ const addressAPI = {
 
 export default addressAPI;
 
+export interface GeocodingResponse {
+  lat: number;
+  lon: number;
+  display_name: string;
+}
+
+export const getMapForward = async (address: string) => {
+  // Ensure address is a string
+  const addressString = typeof address === 'object' 
+    ? Object.values(address).filter(Boolean).join(', ')
+    : address;
+    
+  try {
+    // Use relative URL to work with proxy
+    return await axios.get('/api/v1/geocode/forward', {
+      params: { address: addressString }
+    });
+  } catch (error) {
+    console.error('Geocoding API failed:', error);
+    throw error;
+  }
+};
+
+export interface GeocodingResult {
+  lat: number;
+  lon: number;
+  display_name?: string;
+}
+
+export interface ForwardGeocodingResponse {
+  data: {
+    success: boolean;
+    message: string;
+    data: GeocodingResult | GeocodingResult[];
+  }
+}

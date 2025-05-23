@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import authApi from '../../apis/auth.api';
-import userApi from '../../apis/user.api';
 import { setAccessTokenToLS, setRefreshTokenToLS, clearLS } from '../../utils/auth';
 
 interface AuthState {

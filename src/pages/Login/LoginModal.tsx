@@ -115,8 +115,8 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
       window.location.reload();
     } catch (error) {
       console.error(error);
-      if (isAxiosUnprocessableEntityError<ErrorResponse>(error)) {
-        const formError = error.response?.data.errors;
+      if (isAxiosUnprocessableEntityError<ErrorResponse<FormData>>(error)) {
+        const formError = error.response?.data.data;
         if (formError?.credential) {
           setError("credential", {
             message: formError.credential,

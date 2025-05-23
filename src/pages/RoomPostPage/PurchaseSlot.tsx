@@ -88,11 +88,13 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
       });
 
       if (response.data?.success) { // Adjust based on actual response structure
+        const newCount = profile?.numberOfPosts ? profile.numberOfPosts + selectedPackage : selectedPackage;
         const updatedProfile = {...profile, numberOfPosts: newCount};
         dispatch(updateProfile(updatedProfile));
       
         if (updatedProfile) {
           setShowSuccessModal(true);
+          setNewPostCount(newCount); // Store for modal display
           onPurchaseSuccess?.(); // Notify parent component
         }
         onHide();
