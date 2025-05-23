@@ -21,6 +21,7 @@ interface HotListingsProps {
   size?: number;
   sort?: string;
   roomType?: "APARTMENT" | "WHOLE_HOUSE" | "BOARDING_HOUSE";
+  onSaveRoom?: (roomId: number) => void;
 }
 
 const HotListings: React.FC<HotListingsProps> = ({
@@ -29,6 +30,7 @@ const HotListings: React.FC<HotListingsProps> = ({
   size = 25,
   sort = "createdAt,desc",
   roomType,
+  onSaveRoom 
 }) => {
   const [hotListings, setHotListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -47,8 +49,6 @@ const HotListings: React.FC<HotListingsProps> = ({
     const emptySlots = Array(minCount - listings.length).fill(null);
     return [...listings, ...emptySlots];
   };
-
-  
 
   // Define fetchRooms outside useEffect
   const fetchRooms = async (attempt = 1) => {
@@ -126,7 +126,13 @@ const HotListings: React.FC<HotListingsProps> = ({
     e.preventDefault();
 
     if (!isAuthenticated) {
-      toast.info("Vui lòng đăng nhập để lưu phòng trọ");
+      // Use onSaveRoom prop to show login modal in parent component
+      if (onSaveRoom) {
+        onSaveRoom(roomId);
+      } else {
+        // Fallback to toast if no handler provided
+        toast.info("Vui lòng đăng nhập để lưu phòng trọ");
+    }
       return;
     }
 

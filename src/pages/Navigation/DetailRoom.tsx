@@ -35,7 +35,7 @@ import RoomMap from "../../components/common/Map/RoomMap";
 import addressAPI from "../../apis/address.api";
 import { get, set } from "lodash";
 import { fallbackGeocode, getDefaultCoordinates, retryApiCall } from "../../utils/geocodingFallback";
-
+import LoginModal from "../../pages/Login/LoginModal";
 
 export default function DetailRoom() {
   const { id } = useParams<{ id: string }>();
@@ -64,6 +64,9 @@ export default function DetailRoom() {
 
   // State để lưu userId
   const [userId, setUserId] = useState<number | null>(null);
+
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [similarRoomsLoading, setSimilarRoomsLoading] = useState<boolean>(true);
 
   // Fetch room details by ID with retry
   useEffect(() => {
@@ -143,36 +146,52 @@ export default function DetailRoom() {
             }
           }
         }
-        
-        // Also use retry for fetching similar rooms
-        console.log("Attempt 1: Loading similar rooms data...");
-        try {
-          const similarRoomsData = await retryApiCall(
-            () => roomApi.aiGetSimilarRoom(roomId),
-            3,
-            1000
-          );
-          
-          if (similarRoomsData?.data?.data) {
-            setSimilarRooms(similarRoomsData.data.data);
-            console.log("Successfully loaded similar rooms");
-          }
-        } catch (error) {
-          console.error("Error fetching similar rooms:", error);
-          // The existing getSimilarRoom function will retry on its own
-        }
-        
+                     
       } catch (error) {
         console.error("Error fetching room details:", error);
         setError("Không thể tải thông tin phòng. Vui lòng thử lại sau.");
       } finally {
         setLoading(false);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     };
     
-    window.scrollTo({ top: 0, behavior: "smooth" });
     fetchRoomDetails();
   }, [id]);
+
+  useEffect(() => {
+    if (!room) return;
+    
+    const fetchSimilarRooms = async () => {
+      setSimilarRoomsLoading(true);
+      setSimilarRoomsError(null);
+      
+      try {
+        console.log("Attempt 1: Loading similar rooms data...");
+        const roomId = room.id;
+        
+        const similarRoomsData = await retryApiCall(
+          () => roomApi.aiGetSimilarRoom(roomId),
+          3,
+          1000
+        );
+        
+        if (similarRoomsData?.data?.data) {
+          setSimilarRooms(similarRoomsData.data.data);
+          console.log("Successfully loaded similar rooms");
+        }
+      } catch (error) {
+        console.error("Error fetching similar rooms:", error);
+        setSimilarRoomsError(
+          "Không thể tải danh sách phòng tương tự. Vui lòng thử lại sau."
+        );
+      } finally {
+        setSimilarRoomsLoading(false);
+      }
+    };
+    
+    fetchSimilarRooms();
+  }, [room]);
 
   // Fetch user profile to get userId
   useEffect(() => {
@@ -256,7 +275,11 @@ export default function DetailRoom() {
 
     const isLoggedIn = localStorage.getItem("accessToken");
     if (!isLoggedIn) {
-      toast.info("Vui lòng đăng nhập để lưu phòng trọ yêu thích");
+      localStorage.setItem("pendingAction", "save-room");
+      localStorage.setItem("pendingRoomId", room.id.toString());
+      
+      // Show login modal
+      setShowLoginModal(true);
       return;
     }
 
@@ -273,6 +296,11 @@ export default function DetailRoom() {
       console.error("Error updating wishlist:", error);
       toast.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
     }
+  };
+
+
+  const handleLoginModalClose = () => {
+    setShowLoginModal(false);
   };
 
   const handleShare = () => {
@@ -912,6 +940,11 @@ export default function DetailRoom() {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <LoginModal 
+        show={showLoginModal}
+        handleClose={handleLoginModalClose}
+      />
     </Container>
   );
 }

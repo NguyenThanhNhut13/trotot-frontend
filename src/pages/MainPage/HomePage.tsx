@@ -15,7 +15,9 @@ import ProvinceListings from "../../components/common/ProvinceListings ";
 import { FaDollarSign, FaMap, FaSearch } from "react-icons/fa";
 import addressAPI from "../../apis/address.api";
 import { District, Province, Ward } from "../../types/address.type";
+import LoginModal from "../../pages/Login/LoginModal";
 import roomApi from "../../apis/room.api";
+import { toast } from "react-toastify";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -37,6 +39,8 @@ const HomePage = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
 
   // useEffect(() => {
   //   const trainAI = async () => {
@@ -49,6 +53,37 @@ const HomePage = () => {
 
   //   trainAI();
   // })
+
+  // Add this function to your component
+  const handleSaveRoom = (roomId: number) => {
+    const isLoggedIn = localStorage.getItem("accessToken");
+    
+    if (!isLoggedIn) {
+      // Store pending action and room ID
+      localStorage.setItem("pendingAction", "save-room");
+      localStorage.setItem("pendingRoomId", roomId.toString());
+      
+      // Show login modal
+      setShowLoginModal(true);
+      setPendingRoomId(roomId.toString());
+      return;
+    }
+    
+    // User is logged in, proceed with save
+    roomApi.addToWishList(roomId)
+      .then(() => {
+        toast.success("Đã lưu phòng thành công");
+      })
+      .catch(error => {
+        console.error("Error saving room:", error);
+        toast.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
+      });
+  };
+
+  // Add this function to your component
+  const handleLoginModalClose = () => {
+    setShowLoginModal(false);
+  };
 
   // Fetch provinces on component mount
   useEffect(() => {
@@ -792,11 +827,15 @@ const HomePage = () => {
         </Row>
       </Container>
 
-      <HotListings roomType="APARTMENT" title="LỰA CHỌN CHỖ Ở HOT" />
+      <HotListings roomType="APARTMENT" title="LỰA CHỌN CHỖ Ở HOT" onSaveRoom={handleSaveRoom}  />
       <RoomList />
-      <HotListings roomType="WHOLE_HOUSE" title="NHÀ NGUYÊN CĂN CHO THUÊ" />
-      <HotListings roomType="BOARDING_HOUSE" title="NHÀ TRỌ, PHÒNG TRỌ" />
+      <HotListings roomType="WHOLE_HOUSE" title="NHÀ NGUYÊN CĂN CHO THUÊ" onSaveRoom={handleSaveRoom}  />
+      <HotListings roomType="BOARDING_HOUSE" title="NHÀ TRỌ, PHÒNG TRỌ" onSaveRoom={handleSaveRoom}  />
       <ProvinceListings provinces={provinces} />
+      <LoginModal 
+        show={showLoginModal}
+        handleClose={handleLoginModalClose}
+      />
     </div>
   );
 };

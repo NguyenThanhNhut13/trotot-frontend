@@ -22,7 +22,7 @@ interface Room {
 export default function SavedRoom() {
   const [savedRooms, setSavedRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-
+  
 
   // Fetch saved rooms from API
   useEffect(() => {

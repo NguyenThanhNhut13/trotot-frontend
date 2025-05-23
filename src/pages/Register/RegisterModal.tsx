@@ -1,11 +1,11 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import omit from "lodash/omit";
+// import omit from "lodash/omit";
 
 import { schema, Schema } from "../../utils/rules";
 import { ErrorResponse } from "../../types/utils.type";
@@ -14,8 +14,8 @@ import { isAxiosUnprocessableEntityError } from "../../utils/utils";
 import OTPModal from "./OTPModal";
 
 import { useAppDispatch } from "../../store/hook";
-import { login } from "../../store/slices/authSlice";
-import { getProfile } from "../../store/slices/userSlice";
+// import { login } from "../../store/slices/authSlice";
+// import { getProfile } from "../../store/slices/userSlice";
 
 type RegisterModalProps = {
   show: boolean;
@@ -36,10 +36,10 @@ const registerSchema = schema.pick([
 ]);
 
 const RegisterModal: React.FC<RegisterModalProps> = ({ show, handleClose }) => {
-   const dispatch = useAppDispatch();
+  //  const dispatch = useAppDispatch();
   
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [currentCredential, setCurrentCredential] = useState("");
