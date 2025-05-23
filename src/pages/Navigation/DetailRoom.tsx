@@ -34,7 +34,7 @@ import { toast } from "react-toastify";
 import RoomMap from "../../components/common/Map/RoomMap";
 import addressAPI from "../../apis/address.api";
 import { get, set } from "lodash";
-import { fallbackGeocode, getDefaultCoordinates } from "../../utils/geocodingFallback";
+import { fallbackGeocode, getDefaultCoordinates, retryApiCall } from "../../utils/geocodingFallback";
 
 
 export default function DetailRoom() {
@@ -65,16 +65,23 @@ export default function DetailRoom() {
   // State để lưu userId
   const [userId, setUserId] = useState<number | null>(null);
 
-  // Fetch room details by ID
+  // Fetch room details by ID with retry
   useEffect(() => {
     const fetchRoomDetails = async () => {
+      setLoading(true);
+      setError(null);
+      
       try {
         // Make sure id is a number
         if (!id) return;
         const roomId = parseInt(id);
         
-        // Get room data
-        const roomResponse = await roomApi.getRoomById(roomId);
+        // Use retry mechanism for room details API call
+        const roomResponse = await retryApiCall(
+          () => roomApi.getRoomById(roomId),
+          3,  // max retries
+          1000 // initial delay in ms
+        );
         
         // Extract the actual room data from the response
         const roomData = roomResponse.data.data;
@@ -86,9 +93,9 @@ export default function DetailRoom() {
           const addressString = typeof roomData.address === 'object'
             ? `${roomData.address.street || ''}, ${roomData.address.ward || ''}, ${roomData.address.district || ''}, ${roomData.address.province || ''}`
             : roomData.address;
-            
+          
           try {
-            // First try with backend API
+            // Try backend API first
             const geoResponse = await addressAPI.getMapForward(addressString);
             const geoData = geoResponse.data.data;
             
@@ -121,7 +128,7 @@ export default function DetailRoom() {
                 setAddress(addressString);
                 console.log("Using fallback geocoding result");
               } else {
-                // If all geocoding fails, use default coordinates based on city
+                // If all geocoding fails, use default coordinates
                 const cityName = roomData.address.province || 'Đà Nẵng';
                 const defaultCoords = getDefaultCoordinates(cityName);
                 setLatitude(defaultCoords.lat);
@@ -130,12 +137,31 @@ export default function DetailRoom() {
               }
             } catch (fallbackError) {
               console.error("All geocoding methods failed:", fallbackError);
-              // Set default coordinates for Da Nang
+              // Set default coordinates
               setLatitude(16.0544);
               setLongitude(108.2022);
             }
           }
         }
+        
+        // Also use retry for fetching similar rooms
+        console.log("Attempt 1: Loading similar rooms data...");
+        try {
+          const similarRoomsData = await retryApiCall(
+            () => roomApi.aiGetSimilarRoom(roomId),
+            3,
+            1000
+          );
+          
+          if (similarRoomsData?.data?.data) {
+            setSimilarRooms(similarRoomsData.data.data);
+            console.log("Successfully loaded similar rooms");
+          }
+        } catch (error) {
+          console.error("Error fetching similar rooms:", error);
+          // The existing getSimilarRoom function will retry on its own
+        }
+        
       } catch (error) {
         console.error("Error fetching room details:", error);
         setError("Không thể tải thông tin phòng. Vui lòng thử lại sau.");

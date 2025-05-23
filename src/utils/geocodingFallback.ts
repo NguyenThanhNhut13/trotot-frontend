@@ -50,3 +50,43 @@ export const getDefaultCoordinates = (cityName: string) => {
   
   return cities[cityName] || cities['Đà Nẵng']; // Default to Da Nang if city not found
 };
+
+/**
+ * Generic retry function for API calls
+ * @param apiCall Function that makes the API call
+ * @param maxRetries Maximum number of retry attempts
+ * @param delay Initial delay between retries in milliseconds
+ * @returns Promise with the API response or throws an error after all retries
+ */
+export const retryApiCall = async <T>(
+  apiCall: () => Promise<T>, 
+  maxRetries = 3, 
+  delay = 1000
+): Promise<T> => {
+  let retries = 0;
+  let lastError: any;
+
+  while (retries < maxRetries) {
+    try {
+      return await apiCall();
+    } catch (error: any) {
+      // Only retry on server errors (500s) or network errors
+      if (error?.response?.status && error.response.status < 500 && error.response.status !== 0) {
+        throw error; // Don't retry for client errors (400s)
+      }
+      
+      lastError = error;
+      retries++;
+      console.log(`API call failed. Attempt ${retries}/${maxRetries}. Retrying in ${delay}ms...`);
+      
+      // Wait before retry
+      await new Promise(resolve => setTimeout(resolve, delay));
+      
+      // Exponential backoff - double the delay for next retry
+      delay *= 2;
+    }
+  }
+  
+  console.error('All retry attempts failed:', lastError);
+  throw lastError;
+};
