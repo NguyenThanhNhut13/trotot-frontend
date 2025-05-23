@@ -1,26 +1,23 @@
-"use client";
-
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { Modal, Button as BsButton, Form } from "react-bootstrap";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useMutation } from "@tanstack/react-query";
 import { FaGoogle, FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
-import { toast } from "react-toastify"; // Thêm toast để hiển thị thông báo lỗi
+import { toast } from "react-toastify";
 
 import authApi from "../../apis/auth.api";
 import { loginSchema, LoginSchema } from "../../utils/rules";
-import { isAxiosUnprocessableEntityError } from "../../utils/utils";
 import { ErrorResponse } from "../../types/utils.type";
-import { AppContext } from "../../contexts/app.context";
-import userApi from "../../apis/user.api";
+import { isAxiosUnprocessableEntityError } from "../../utils/utils";
 import ChangePasswordModal from "./ChangePasswordModal";
 import RegisterModal from "../Register/RegisterModal";
 import OTPModal from "../Register/OTPModal";
-
-import { useAppDispatch } from '../../store/hooks';
+// Import Redux hooks and actions
+import { useAppDispatch } from '../../store/hook';
 import { login } from '../../store/slices/authSlice';
 import { getProfile } from '../../store/slices/userSlice';
+import { useMutation } from "@tanstack/react-query";
+
 
 type FormData = Pick<LoginSchema, "credential" | "password">;
 const loginSchemaPick = loginSchema.pick(["credential", "password"]);
@@ -31,7 +28,8 @@ interface LoginModalProps {
 }
 
 const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
-  const { setIsAuthenticated, setProfile } = useContext(AppContext);
+  const dispatch = useAppDispatch();
+
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
@@ -99,6 +97,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
   //   });
   // });
 
+  // Update the submit handler to use Redux
   const onSubmit = handleSubmit(async (data) => {
     setIsLoading(true);
     const requestBody = {
@@ -107,14 +106,32 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
     };
 
     try {
+      // Use Redux for login and profile fetching
       await dispatch(login(requestBody)).unwrap();
       await dispatch(getProfile()).unwrap();
+      
+      // Close modal and reload page
       handleClose();
       window.location.reload();
     } catch (error) {
-      // Handle errors
-      setIsLoading(false);
       console.error(error);
+      if (isAxiosUnprocessableEntityError<ErrorResponse>(error)) {
+        const formError = error.response?.data.errors;
+        if (formError?.credential) {
+          setError("credential", {
+            message: formError.credential,
+            type: "Server",
+          });
+        }
+        if (formError?.password) {
+          setError("password", {
+            message: formError.password,
+            type: "Server",
+          });
+        }
+      }
+      toast.error("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+      setIsLoading(false);
     }
   });
 

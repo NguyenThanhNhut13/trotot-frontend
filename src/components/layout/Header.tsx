@@ -10,12 +10,10 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoginModal from "../../pages/Login/LoginModal";
 import RegisterModal from "../../pages/Register/RegisterModal";
-import authApi from "../../apis/auth.api";
 import { useMutation } from "@tanstack/react-query";
-import { AppContext } from "../../contexts/app.context";
 import { FaBell, FaHeart } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { useAppSelector, useAppDispatch } from  "../../store/hook";
 import { logout } from '../../store/slices/authSlice';
 
 const Header = () => {
@@ -23,23 +21,23 @@ const Header = () => {
   const [showRegister, setShowRegister] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const isActive = (path: string) => location.pathname === path;
+  
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector(state => state.auth);
   const { profile } = useAppSelector(state => state.user);
 
-  const { setIsAuthenticated, setProfile, profile } = useContext(AppContext)
+  const isActive = (path: string) => location.pathname === path;
 
-  const logoutMutation = useMutation({
-    mutationFn: authApi.logout,
-    onSuccess: () => {
-      setIsAuthenticated(false)
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
-      setProfile(null)
-      navigate('/')
-    }
-  })
+  // const logoutMutation = useMutation({
+  //   mutationFn: authApi.logout,
+  //   onSuccess: () => {
+  //     setIsAuthenticated(false)
+  //     localStorage.removeItem('accessToken')
+  //     localStorage.removeItem('refreshToken')
+  //     setProfile(null)
+  //     navigate('/')
+  //   }
+  // })
 
   const handleLogout = () => {
     const refreshToken = localStorage.getItem("refreshToken");

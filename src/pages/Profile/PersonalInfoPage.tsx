@@ -1,6 +1,5 @@
 import React, { useState, useContext, useEffect } from "react";
 import { Container, Row, Col, Form, Button, Modal } from "react-bootstrap";
-import { AppContext } from "../../contexts/app.context";
 import Sidebar from "../MainPage/SidebarPersion";
 import userApi from "../../apis/user.api";
 import { useForm } from "react-hook-form";
@@ -9,6 +8,8 @@ import { useMutation } from "@tanstack/react-query";
 import { isAxiosUnprocessableEntityError } from "../../utils/utils";
 import { toast } from "react-toastify";
 import { userSchema, UserSchema } from "../../utils/rules";
+import { useAppSelector, useAppDispatch } from '../../store/hook';
+import { updateProfile } from '../../store/slices/userSlice';
 
 // Use the existing user schema for validation
 type FormData = Pick<
@@ -24,7 +25,8 @@ const userSchemaP = userSchema.pick([
 ]);
 
 const PersonalInfoPage = () => {
-  const { profile } = useContext(AppContext);
+   const { profile } = useAppSelector(state => state.user);
+  const dispatch = useAppDispatch();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 

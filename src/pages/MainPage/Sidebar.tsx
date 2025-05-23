@@ -1,15 +1,16 @@
-import React, { use, useContext, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { AppContext } from "../../contexts/app.context";
 import PurchasePostModal from "../RoomPostPage/PurchaseSlot";
 import "../../assets/styles/Sidebar.css";
 import paymentAPI from "../../apis/payment.api";
 import { toast } from "react-toastify";
 import userApi from "../../apis/user.api";
 
+import { useAppSelector } from '../../store/hook';
+
 const Sidebar = () => {
-  const { profile } = useContext(AppContext);
+  const { profile } = useAppSelector(state => state.user);
   const navigate = useNavigate();
   const [showPurchaseModal, setShowPurchaseModal] = useState(false); // Trạng thái hiển thị modal
   const [total, setTotal] = useState<number>(0);

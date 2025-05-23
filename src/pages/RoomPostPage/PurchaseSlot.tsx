@@ -2,10 +2,13 @@ import React, { useContext, useState } from "react";
 import { Modal, Button, Row, Col } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { AppContext } from "../../contexts/app.context";
 import { toast } from "react-toastify";
 import paymentAPI from "../../apis/payment.api";
 import userApi from "../../apis/user.api";
+
+import { useAppSelector, useAppDispatch } from '../../store/hook';
+import { updateProfile } from '../../store/slices/userSlice';
+
 
 interface PurchasePostModalProps {
   show: boolean;
@@ -23,9 +26,10 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
   const [selectedPackage, setSelectedPackage] = useState<number | null>(1);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [newPostCount, setNewPostCount] = useState<number | null>(null);
-  const { profile, setProfile } = useContext(AppContext);
   const navigate = useNavigate();
   const accessToken = localStorage.getItem("accessToken");
+  const { profile } = useAppSelector(state => state.user);
+  const dispatch = useAppDispatch();
 
   const packages = [
     { name: "Thêm 1 Trọ", price: 20000, discount: 0, amount: 1 },
@@ -47,7 +51,7 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
   const fetchUpdatedProfile = async () => {
     try {
       const response = await userApi.getProfile();
-      setProfile(response.data.data);
+      // setProfile(response.data.data);
       setNewPostCount(response.data.data.numberOfPosts);
       return response.data.data;
     } catch (error) {
@@ -84,7 +88,9 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
       });
 
       if (response.data?.success) { // Adjust based on actual response structure
-        const updatedProfile = await fetchUpdatedProfile();
+        const updatedProfile = {...profile, numberOfPosts: newCount};
+        dispatch(updateProfile(updatedProfile));
+      
         if (updatedProfile) {
           setShowSuccessModal(true);
           onPurchaseSuccess?.(); // Notify parent component

@@ -2,18 +2,18 @@ import { configureStore } from '@reduxjs/toolkit'
 import authReducer from './slices/authSlice'
 import userReducer from './slices/userSlice'
 import wishlistReducer from './slices/wishlistSlice'
-import roomReducer from './slices/roomSlice'
-import paymentReducer from './slices/paymentSlice'
-import reviewReducer from './slices/reviewSlice'
+// import roomReducer from './slices/roomSlice'
+// import paymentReducer from './slices/paymentSlice'
+// import reviewReducer from './slices/reviewSlice'
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     user: userReducer,
     wishlist: wishlistReducer,
-    room: roomReducer,
-    payment: paymentReducer,
-    review: reviewReducer,
+    // room: roomReducer,
+    // payment: paymentReducer,
+    // review: reviewReducer,
   },
 })
 

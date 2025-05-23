@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Container, Row, Col, Card, Spinner, Alert } from "react-bootstrap";
-import { AppContext } from "../../contexts/app.context";
 import paymentAPI from "../../apis/payment.api";
 import { toast } from "react-toastify";
 import Sidebar from "../MainPage/Sidebar";
@@ -15,6 +14,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { useAppSelector } from "../../store/hook";
 
 // Register Chart.js components
 ChartJS.register(
@@ -35,7 +35,7 @@ interface Transaction {
 }
 
 const HistoryPage = () => {
-  const { profile } = useContext(AppContext);
+  const { profile } = useAppSelector(state => state.user);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);

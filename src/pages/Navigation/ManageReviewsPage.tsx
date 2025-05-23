@@ -1,12 +1,12 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Container, Row, Col, Card, Table, Spinner, Alert, Button, Modal, Form } from "react-bootstrap";
-import { AppContext } from "../../contexts/app.context";
 import reportAPI, { REPORT_TYPES, REPORT_STATUSES } from "../../apis/report.api";
 import reviewAPI from "../../apis/review.api"; // Import reviewAPI
 import { toast } from "react-toastify";
 import Sidebar from "../MainPage/Sidebar";
 import "../../assets/styles/ManageReviewsPage.css";
 import { Bar } from "react-chartjs-2";
+import { useAppSelector } from '../../store/hook';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -48,7 +48,7 @@ interface ReportDTO {
 }
 
 const ManageReviewsPage = () => {
-  const { profile } = useContext(AppContext);
+   const { profile } = useAppSelector(state => state.user);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reports, setReports] = useState<ReportDTO[]>([]);
   const [filteredReports, setFilteredReports] = useState<ReportDTO[]>([]);

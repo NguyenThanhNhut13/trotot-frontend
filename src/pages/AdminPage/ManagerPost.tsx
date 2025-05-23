@@ -14,13 +14,13 @@ import roomApi from "../../apis/room.api";
 import { formatCurrency } from "../../utils/utils";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { AppContext } from "../../contexts/app.context";
 import { FaEdit, FaEye, FaTrash } from "react-icons/fa";
 import { Room } from "../../types/room.type";
+import { useAppSelector } from '../../store/hook';
 
 export default function ManagerPost() {
   const navigate = useNavigate();
-  const { profile } = useContext(AppContext);
+  const { profile } = useAppSelector(state => state.user);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
