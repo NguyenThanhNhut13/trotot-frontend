@@ -175,14 +175,14 @@ const Footer = () => {
               </li>
               <li className="mb-2 d-flex align-items-center">
                 <FaFacebook className="text-primary me-2" />{" "}
-                <span className={isMobile ? "text-truncate" : ""}>tromoitoanquoc - tromoihue</span>
+                <span className={isMobile ? "text-truncate" : ""}>trotottoanquoc - trotothue</span>
               </li>
               <li className="mb-2 d-flex align-items-center">
                 <FaTiktok className="text-primary me-2" />{" "}
-                <span className={isMobile ? "text-truncate" : ""}>@tromoi.com - @tromoi.hcm</span>
+                <span className={isMobile ? "text-truncate" : ""}>@trotot.com - @trotot.hcm</span>
               </li>
               <li className="mb-2 d-flex align-items-center">
-                <FaYoutube className="text-primary me-2" /> <span>@tromoi</span>
+                <FaYoutube className="text-primary me-2" /> <span>@trotot</span>
               </li>
               <li className="mb-2 d-flex align-items-center">
                 <FaMapMarkerAlt className="text-primary me-2" />{" "}

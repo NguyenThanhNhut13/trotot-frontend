@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { useRoutes } from "react-router-dom";
 import HomePage from "./pages/MainPage/HomePage";
 import CategoryPage from "./pages/Navigation/CategoryPage";
