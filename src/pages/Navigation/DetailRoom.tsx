@@ -145,6 +145,12 @@ export default function DetailRoom() {
               setLongitude(108.2022);
             }
           }
+        } else {
+          // No address available
+          console.log("No address data available, using default coordinates");
+          setLatitude(16.0544);
+          setLongitude(108.2022);
+          setAddress("Địa chỉ không xác định");
         }
                      
       } catch (error) {
@@ -463,9 +469,15 @@ export default function DetailRoom() {
             <div className="d-flex align-items-center mt-2">
               <FaMapMarkerAlt className="text-secondary me-1" />
               <span className="text-secondary">
-                {room.address.houseNumber}, {room.address.street},{" "}
-                {room.address.ward}, {room.address.district},{" "}
-                {room.address.province}
+                {room.address ? (
+                  <>
+                    {room.address.houseNumber || ''}, {room.address.street || ''},{" "}
+                    {room.address.ward || ''}, {room.address.district || ''},{" "}
+                    {room.address.province || ''}
+                  </>
+                ) : (
+                  "Đang cập nhật địa chỉ"
+                )}
               </span>
             </div>
           </div>
@@ -842,9 +854,12 @@ export default function DetailRoom() {
                                   {similarRoom.area} m²
                                 </div>
                                 <div className="small text-secondary text-truncate">
-                                  <FaMapMarkerAlt size={10} className="me-1" />
-                                  {similarRoom.address?.district},{" "}
-                                  {similarRoom.address?.province}
+                                  <div className="small text-secondary text-truncate">
+                                    <FaMapMarkerAlt size={10} className="me-1" />
+                                    {similarRoom.address ? 
+                                      `${similarRoom.address.district || ''}, ${similarRoom.address.province || ''}` : 
+                                      'Đang cập nhật địa chỉ'}
+                                  </div>
                                 </div>
                               </div>
                             </Col>
