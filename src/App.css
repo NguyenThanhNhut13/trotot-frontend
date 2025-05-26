@@ -58,3 +58,19 @@
     margin-bottom: 30px;
   }
 }
+
+/* Thêm rule CSS mạnh hơn cho layout 5 cột */
+@media (min-width: 992px) {
+  .hot-listings .room-column {
+    flex: 0 0 20% !important;
+    max-width: 20% !important;
+    width: 20% !important;
+  }
+  
+  /* Đảm bảo Row không bị lỗi overflow */
+  .hot-listings .row {
+    margin-right: -10px;
+    margin-left: -10px;
+    flex-wrap: wrap;
+  }
+}

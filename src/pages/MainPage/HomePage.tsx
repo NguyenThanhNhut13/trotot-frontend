@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Form,
@@ -44,6 +44,10 @@ const HomePage = () => {
   const [loading, setLoading] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
+
+  const locationDropdownRef = useRef<HTMLDivElement>(null);
+  const priceDropdownRef = useRef<HTMLDivElement>(null);
+  const areaDropdownRef = useRef<HTMLDivElement>(null);
 
   const apartmentListings = useAppSelector(state => 
     selectListingsByType(state, 'APARTMENT')
@@ -325,7 +329,7 @@ const HomePage = () => {
           backgroundImage:
             "url('https://tromoi.com/frontend/home/images/banner_default.jpg')",
           backgroundSize: "cover",
-          padding: "50px 0 20px",
+          padding: isMobile ? "30px 0 15px" : "50px 0 20px",
           overflow: "visible",
           position: "relative",
           zIndex: 2,
@@ -337,19 +341,25 @@ const HomePage = () => {
             <Col md={7} className="text-white px-4">
               <h1
                 className="fw-bold"
-                style={{ fontSize: "3rem", lineHeight: 1.2 }}
+                style={{ 
+                  fontSize: isMobile ? "2rem" : isTablet ? "2.5rem" : "3rem", 
+                  lineHeight: 1.2 
+                }}
               >
                 TÌM NHANH, KIẾM DỄ
               </h1>
               <h1
                 className="fw-bold mb-4"
-                style={{ fontSize: "3rem", lineHeight: 1.2 }}
+                style={{ 
+                  fontSize: isMobile ? "2rem" : isTablet ? "2.5rem" : "3rem", 
+                  lineHeight: 1.2 
+                }}
               >
                 TRỌ MỚI TOÀN QUỐC
               </h1>
-              <p className="mb-4" style={{ fontSize: "1.1rem" }}>
+              <p className="mb-4" style={{ fontSize: isMobile ? "0.9rem" : "1.1rem" }}>
                 Trang thông tin và cho thuê phòng trọ nhanh chóng, hiệu quả với
-                <br />
+                {!isMobile && <br />}
                 hơn 500 tin đăng mới và 30.000 lượt xem mỗi ngày
               </p>
             </Col>
@@ -358,453 +368,634 @@ const HomePage = () => {
           <div className="">
             {/* Filter Section */}
             <Row className="mb-0 ">
-              <Col>
-                <div className="d-flex bg-transparent">
-                  <Button
-                    variant="primary"
-                    className="d-inline-block py-3  border-0 fw-bold"
-                    onClick={() => setSelectedCategory("tat-ca")}
-                    style={{
-                      backgroundColor:
-                        selectedCategory === "tat-ca" ? "#0046a8" : "#e5ecf6",
-                      color:
-                        selectedCategory === "tat-ca" ? "#ffffff" : "#0046a8",
-                      padding: "0 60px",
-                      borderRadius: "8px 8px 0 0",
-                      outline: "none",
-                      boxShadow: "none",
-                    }}
-                  >
-                    Tất cả
-                  </Button>
-                  <Button
-                    variant="light"
-                    className="d-inline-block py-3 border-0 fw-bold"
-                    onClick={() => setSelectedCategory("nha-tro-phong-tro")}
-                    style={{
-                      backgroundColor:
-                        selectedCategory === "nha-tro-phong-tro"
-                          ? "#0046a8"
-                          : "#e5ecf6",
-                      color:
-                        selectedCategory === "nha-tro-phong-tro"
-                          ? "#ffffff"
-                          : "#0046a8",
-                      marginLeft: "2px",
-                      padding: "0 60px",
-                      borderRadius: "8px 8px 0 0",
-                      outline: "none",
-                      boxShadow: "none",
-                    }}
-                  >
-                    Nhà trọ, phòng trọ
-                  </Button>
-                  <Button
-                    variant="light"
-                    className="d-inline-block py-3 border-0 fw-bold"
-                    onClick={() => setSelectedCategory("nha-nguyen-can")}
-                    style={{
-                      backgroundColor:
-                        selectedCategory === "nha-nguyen-can"
-                          ? "#0046a8"
-                          : "#e5ecf6",
-                      color:
-                        selectedCategory === "nha-nguyen-can"
-                          ? "#ffffff"
-                          : "#0046a8",
-                      marginLeft: "2px",
-                      padding: "0 60px",
-                      borderRadius: "8px 8px 0 0",
-                      outline: "none",
-                      boxShadow: "none",
-                    }}
-                  >
-                    Nhà nguyên căn
-                  </Button>
-                  <Button
-                    variant="light"
-                    className="d-inline-block py-3  border-0 fw-bold"
-                    onClick={() => setSelectedCategory("can-ho-chung-cu")}
-                    style={{
-                      backgroundColor:
-                        selectedCategory === "can-ho-chung-cu"
-                          ? "#0046a8"
-                          : "#e5ecf6",
-                      color:
-                        selectedCategory === "can-ho-chung-cu"
-                          ? "#ffffff"
-                          : "#0046a8",
-                      marginLeft: "2px",
-                      padding: "0 60px",
-                      borderRadius: "8px 8px 0 0",
-                      outline: "none",
-                      boxShadow: "none",
-                    }}
-                  >
-                    Căn hộ
-                  </Button>
-                </div>
+              <Col className={isMobile ? "px-0" : ""}>
+                {/* Category Tabs - Responsive */}
+                {isMobile ? (
+                  // Mobile category dropdown
+                  <div className="mb-2 px-2">
+                    <Form.Select
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className="form-select py-3 fw-bold"
+                    >
+                      <option value="tat-ca">Tất cả</option>
+                      <option value="nha-tro-phong-tro">Nhà trọ, phòng trọ</option>
+                      <option value="nha-nguyen-can">Nhà nguyên căn</option>
+                      <option value="can-ho-chung-cu">Căn hộ</option>
+                    </Form.Select>
+                  </div>
+                ) : (
+                  // Desktop tabs
+                  <div className="d-flex bg-transparent">
+                    <Button
+                      variant="primary"
+                      className="d-inline-block py-3 border-0 fw-bold"
+                      onClick={() => setSelectedCategory("tat-ca")}
+                      style={{
+                        backgroundColor:
+                          selectedCategory === "tat-ca" ? "#0046a8" : "#e5ecf6",
+                        color:
+                          selectedCategory === "tat-ca" ? "#ffffff" : "#0046a8",
+                        padding: "0 60px",
+                        borderRadius: "8px 8px 0 0",
+                        outline: "none",
+                        boxShadow: "none",
+                      }}
+                    >
+                      Tất cả
+                    </Button>
+                    <Button
+                      variant="light"
+                      className="d-inline-block py-3 border-0 fw-bold"
+                      onClick={() => setSelectedCategory("nha-tro-phong-tro")}
+                      style={{
+                        backgroundColor:
+                          selectedCategory === "nha-tro-phong-tro"
+                            ? "#0046a8"
+                            : "#e5ecf6",
+                        color:
+                          selectedCategory === "nha-tro-phong-tro"
+                            ? "#ffffff"
+                            : "#0046a8",
+                        marginLeft: "2px",
+                        padding: "0 60px",
+                        borderRadius: "8px 8px 0 0",
+                        outline: "none",
+                        boxShadow: "none",
+                      }}
+                    >
+                      Nhà trọ, phòng trọ
+                    </Button>
+                    <Button
+                      variant="light"
+                      className="d-inline-block py-3 border-0 fw-bold"
+                      onClick={() => setSelectedCategory("nha-nguyen-can")}
+                      style={{
+                        backgroundColor:
+                          selectedCategory === "nha-nguyen-can"
+                            ? "#0046a8"
+                            : "#e5ecf6",
+                        color:
+                          selectedCategory === "nha-nguyen-can"
+                            ? "#ffffff"
+                            : "#0046a8",
+                        marginLeft: "2px",
+                        padding: "0 60px",
+                        borderRadius: "8px 8px 0 0",
+                        outline: "none",
+                        boxShadow: "none",
+                      }}
+                    >
+                      Nhà nguyên căn
+                    </Button>
+                    <Button
+                      variant="light"
+                      className="d-inline-block py-3 border-0 fw-bold"
+                      onClick={() => setSelectedCategory("can-ho-chung-cu")}
+                      style={{
+                        backgroundColor:
+                          selectedCategory === "can-ho-chung-cu"
+                            ? "#0046a8"
+                            : "#e5ecf6",
+                        color:
+                          selectedCategory === "can-ho-chung-cu"
+                            ? "#ffffff"
+                            : "#0046a8",
+                        marginLeft: "2px",
+                        padding: "0 60px",
+                        borderRadius: "8px 8px 0 0",
+                        outline: "none",
+                        boxShadow: "none",
+                      }}
+                    >
+                      Căn hộ
+                    </Button>
+                  </div>
+                )}
               </Col>
             </Row>
-            {/* Filter Inputs */}
+            {/* Filter Inputs - Responsive */}
             <Row className="g-0 position-relative" style={{ zIndex: 1000 }}>
               <Col>
-                <div
-                  className="d-flex p-2 align-items-stretch"
-                  style={{
-                    backgroundColor: "#0046a8",
-                    borderRadius: "0 0 8px 8px",
-                  }}
-                >
-                  {/* Input: Ban muon tim tro o dau */}
+                {isMobile ? (
+                  // Mobile vertical stacked filters
                   <div
-                    className="flex-grow-1 px-1"
-                    style={{ maxWidth: "270px" }}
+                    className="p-2"
+                    style={{
+                      backgroundColor: "#0046a8",
+                      borderRadius: "0 0 8px 8px",
+                    }}
                   >
-                    <div className="input-group rounded-3 overflow-hidden h-100">
-                      <span className="input-group-text bg-white border-0 h-100 d-flex align-items-center">
-                        <FaSearch color="#0046a8" />
-                      </span>
-                      <Form.Control
-                        type="text"
-                        placeholder="Bạn muốn tìm trọ ở đâu?"
-                        className="border-0 py-2"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                      />
+                    {/* Search input */}
+                    <div className="mb-2">
+                      <div className="input-group rounded-3 overflow-hidden">
+                        <span className="input-group-text bg-white border-0 d-flex align-items-center">
+                          <FaSearch color="#0046a8" />
+                        </span>
+                        <Form.Control
+                          type="text"
+                          placeholder="Bạn muốn tìm trọ ở đâu?"
+                          className="border-0 py-2"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
                     </div>
-                  </div>
-                  {/* Dia diem */}
-                  <div
-                    className="flex-grow-1 px-1"
-                    style={{ maxWidth: "270px" }}
-                  >
-                    <div className="input-group rounded-3 h-100">
-                      <div className="dropdown w-100 h-100 position-static">
-                        <button
-                          className="btn bg-white text-secondary border-0 w-100 h-100 text-start d-flex align-items-center justify-content-between dropdown-toggle"
-                          type="button"
-                          id="dropdownLocation"
-                          data-bs-toggle="dropdown"
-                          aria-expanded="false"
+                    
+                    {/* Location */}
+                    <div className="mb-2">
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle 
+                          className="bg-white text-secondary border-0 w-100 text-start d-flex align-items-center justify-content-between"
                         >
                           <div className="d-flex align-items-center">
-                            <span className="input-group-text bg-white border-0 p-0 me-2">
+                            <span className="input-group-text bg-white border-0 p-0 me-3 ms-3">
                               <FaMap color="#0046a8" />
                             </span>
                             {selectedWard ? (
-                              <span
-                                className="text-truncate d-inline-block"
-                                style={{
-                                  maxWidth: "200px", // hoặc bạn set cố định phù hợp với thiết kế
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                }}
-                              >
-                                {(wards.find((w) => w.code === selectedWard)
-                                  ?.name || "") +
+                              <span className="text-truncate d-inline-block" style={{ maxWidth: "200px" }}>
+                                {(wards.find((w) => w.code === selectedWard)?.name || "") +
                                   ", " +
-                                  (districts.find(
-                                    (d) => d.code === selectedDistrict
-                                  )?.name || "") +
+                                  (districts.find((d) => d.code === selectedDistrict)?.name || "") +
                                   ", " +
-                                  (provinces.find(
-                                    (p) => p.code === selectedProvince
-                                  )?.name || "")}
+                                  (provinces.find((p) => p.code === selectedProvince)?.name || "")}
                               </span>
                             ) : selectedDistrict ? (
-                              <span
-                                className="text-truncate d-inline-block"
-                                style={{
-                                  maxWidth: "200px", // hoặc bạn set cố định phù hợp với thiết kế
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                }}
-                              >
-                                {(districts.find(
-                                  (d) => d.code === selectedDistrict
-                                )?.name || "") +
+                              <span className="text-truncate d-inline-block" style={{ maxWidth: "200px" }}>
+                                {(districts.find((d) => d.code === selectedDistrict)?.name || "") +
                                   ", " +
-                                  (provinces.find(
-                                    (p) => p.code === selectedProvince
-                                  )?.name || "")}
+                                  (provinces.find((p) => p.code === selectedProvince)?.name || "")}
                               </span>
                             ) : selectedProvince ? (
-                              <span
-                                className="text-truncate d-inline-block"
-                                style={{
-                                  maxWidth: "200px", // hoặc bạn set cố định phù hợp với thiết kế
-                                  whiteSpace: "nowrap",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                }}
-                              >
-                                {provinces.find(
-                                  (p) => p.code === selectedProvince
-                                )?.name || ""}
+                              <span className="text-truncate d-inline-block" style={{ maxWidth: "200px" }}>
+                                {provinces.find((p) => p.code === selectedProvince)?.name || ""}
                               </span>
                             ) : (
                               <span>Địa điểm</span>
                             )}
                           </div>
-                        </button>
-                        <div
-                          className="dropdown-menu p-0 w-100"
-                          style={{ zIndex: 1050 }}
-                          aria-labelledby="dropdownLocation"
-                        >
-                          <div className="location-form p-0">
-                            <div className="mb-0">
+                        </Dropdown.Toggle>
+                        
+                        {/* Dropdown Menu cho địa điểm */}
+                        <Dropdown.Menu className="w-100 shadow border-0 p-0 mt-1">
+                          <div className="p-3">
+                            <h6 className="fw-bold text-primary mb-3">Chọn khu vực</h6>
+                            
+                            <Form.Group controlId="mobile-province" className="mb-3">
+                              <Form.Label className="text-dark mb-1 fw-bold small">Tỉnh/Thành phố</Form.Label>
                               <Form.Select
                                 value={selectedProvince}
-                                onChange={(e) => {
-                                  setSelectedProvince(e.target.value);
-                                  setSelectedDistrict("");
-                                  setSelectedWard("");
-                                }}
-                                className="border-0 border-bottom rounded-0 py-3"
-                                disabled={loading}
+                                onChange={(e) => setSelectedProvince(e.target.value)}
+                                className="form-select"
+                                style={{ fontSize: '14px', borderColor: '#dee2e6', padding: '8px 12px' }}
                               >
-                                <option value="">Chọn Tỉnh/TP...</option>
-                                {Array.isArray(provinces) &&
-                                  provinces.map((province, index) => (
-                                    <option
-                                      key={province.code || index}
-                                      value={province.code}
-                                    >
-                                      {province.name_with_type}
-                                    </option>
-                                  ))}
+                                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                {provinces.map((province) => (
+                                  <option key={province.code} value={province.code}>
+                                    {province.name}
+                                  </option>
+                                ))}
                               </Form.Select>
-                            </div>
-
-                            <div className="mb-0">
+                            </Form.Group>
+                            
+                            <Form.Group controlId="mobile-district" className="mb-3">
+                              <Form.Label className="text-dark mb-1 fw-bold small">Quận/Huyện</Form.Label>
                               <Form.Select
                                 value={selectedDistrict}
-                                onChange={(e) => {
-                                  setSelectedDistrict(e.target.value);
-                                  setSelectedWard("");
-                                }}
-                                className="border-0 border-bottom rounded-0 py-3"
-                                disabled={!selectedProvince || loading}
+                                onChange={(e) => setSelectedDistrict(e.target.value)}
+                                disabled={!selectedProvince}
+                                className={`form-select ${!selectedProvince ? 'bg-light' : ''}`}
+                                style={{ fontSize: '14px', borderColor: '#dee2e6', padding: '8px 12px' }}
                               >
-                                <option value="">Quận/Huyện...</option>
+                                <option value="">-- Chọn Quận/Huyện --</option>
                                 {districts.map((district) => (
-                                  <option
-                                    key={district.id}
-                                    value={district.code}
-                                  >
-                                    {district.name_with_type}
+                                  <option key={district.code} value={district.code}>
+                                    {district.name}
                                   </option>
                                 ))}
                               </Form.Select>
-                            </div>
-
-                            <div className="mb-0">
+                            </Form.Group>
+                            
+                            <Form.Group controlId="mobile-ward" className="mb-3">
+                              <Form.Label className="text-dark mb-1 fw-bold small">Phường/Xã</Form.Label>
                               <Form.Select
                                 value={selectedWard}
-                                onChange={(e) =>
-                                  setSelectedWard(e.target.value)
-                                }
-                                className="border-0 border-bottom rounded-0 py-3"
-                                disabled={!selectedDistrict || loading}
+                                onChange={(e) => setSelectedWard(e.target.value)}
+                                disabled={!selectedDistrict}
+                                className={`form-select ${!selectedDistrict ? 'bg-light' : ''}`}
+                                style={{ fontSize: '14px', borderColor: '#dee2e6', padding: '8px 12px' }}
                               >
-                                <option value="">Đường phố...</option>
+                                <option value="">-- Chọn Phường/Xã --</option>
                                 {wards.map((ward) => (
-                                  <option key={ward.id} value={ward.code}>
-                                    {ward.name_with_type}
+                                  <option key={ward.code} value={ward.code}>
+                                    {ward.name}
                                   </option>
                                 ))}
                               </Form.Select>
-                            </div>
-
-                            <div className="d-flex justify-content-between p-2">
+                            </Form.Group>
+                            
+                            <div className="d-flex justify-content-end">
                               <Button
-                                variant="link"
-                                className="text-decoration-none d-flex align-items-center"
+                                variant="outline-secondary"
+                                size="sm"
+                                className="me-2"
                                 onClick={resetLocationSelections}
                               >
-                                <i className="bi bi-arrow-repeat me-1"></i> Đặt
-                                lại
+                                Đặt lại
                               </Button>
-                              <Button onClick={handleSearch} variant="primary">
-                                Tìm ngay
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => {
+                                  // Đóng dropdown sau khi chọn xong
+                                  document.body.click();
+                                }}
+                              >
+                                Xác nhận
                               </Button>
                             </div>
                           </div>
-                        </div>
-                      </div>
+                        </Dropdown.Menu>
+                      </Dropdown>
                     </div>
-                  </div>
-                  {/* Muc gia */}
-                  <div
-                    className="flex-grow-1 px-1 position-relative"
-                    style={{ maxWidth: "270px" }}
-                  >
-                    <div className="input-group rounded-3 h-100">
-                      <Dropdown className="w-100 h-100">
-                        <Dropdown.Toggle className="bg-white text-secondary border-0 w-100 h-100 text-start d-flex align-items-center justify-content-between">
+                
+                    {/* Price Range - Sửa lại để có thể click được */}
+                    <div className="mb-2">
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle className="bg-white text-secondary border-0 w-100 text-start d-flex align-items-center justify-content-between">
                           <span className="input-group-text bg-white border-0">
                             <FaDollarSign color="#0046a8" />
                           </span>
                           <span className="text-start w-100">
                             {minPriceInput || maxPriceInput
-                              ? `Từ ${minPriceInput || "0"} → ${
-                                  maxPriceInput || "∞"
-                                } triệu`
+                              ? `Từ ${minPriceInput || "0"} → ${maxPriceInput || "∞"} triệu`
                               : priceLabelMap[priceRange] || "Mức giá"}
                           </span>
                         </Dropdown.Toggle>
-
-                        <Dropdown.Menu
-                          className="w-100 p-3"
-                          style={{ zIndex: 1050 }}
-                        >
-                          <div className="mb-3">
-                            <div className="d-flex align-items-center mb-3">
-                              <div className="pe-2 flex-grow-1">
-                                <Form.Control
-                                  type="text"
-                                  placeholder="Từ"
-                                  className="rounded"
-                                  value={minPriceInput}
-                                  onChange={(e) => {
-                                    setMinPriceInput(e.target.value);
-                                    setPriceRange(""); // reset radio
-                                  }}
-                                />
-                              </div>
-                              <div className="px-2">→</div>
-                              <div className="ps-2 flex-grow-1">
-                                <Form.Control
-                                  type="text"
-                                  placeholder="Đến"
-                                  className="rounded"
-                                  value={maxPriceInput}
-                                  onChange={(e) => {
-                                    setMaxPriceInput(e.target.value);
-                                    setPriceRange(""); // reset radio
-                                  }}
-                                />
-                              </div>
-                            </div>
-
-                            {Object.entries(priceLabelMap).map(
-                              ([key, label]) => (
+                        
+                        {/* Dropdown Menu cho giá */}
+                        <Dropdown.Menu className="w-100">
+                          <div className="p-3">
+                            <h6 className="mb-3">Chọn mức giá</h6>
+                            
+                            {/* Mức giá mặc định */}
+                            <div className="mb-3">
+                              {Object.keys(priceLabelMap).map((price) => (
                                 <Form.Check
+                                  key={price}
                                   type="radio"
-                                  id={key}
-                                  name="price-range"
-                                  key={key}
-                                  label={
-                                    key === "all" ? (
-                                      <span className="fw-bold">{label}</span>
-                                    ) : (
-                                      label
-                                    )
-                                  }
-                                  checked={priceRange === key}
+                                  id={price}
+                                  name="priceRange"
+                                  label={priceLabelMap[price]}
+                                  checked={priceRange === price}
                                   onChange={() => {
-                                    setPriceRange(key);
+                                    setPriceRange(price);
                                     setMinPriceInput("");
                                     setMaxPriceInput("");
                                   }}
                                   className="mb-2"
                                 />
-                              )
-                            )}
-                          </div>
-
-                          <div className="d-flex justify-content-between p-2">
-                            <Button
-                              variant="link"
-                              className="text-decoration-none d-flex align-items-center"
-                              onClick={() => {
-                                setMinPriceInput("");
-                                setMaxPriceInput("");
-                                setPriceRange("all");
-                              }}
-                            >
-                              <i className="bi bi-arrow-repeat me-1"></i> Đặt
-                              lại
-                            </Button>
-                            <Button onClick={handleSearch} variant="primary">
-                              Tìm ngay
-                            </Button>
+                              ))}
+                            </div>
+                            
+                            {/* Tùy chọn giá */}
+                            <div className="mb-3">
+                              <h6 className="small fw-bold mb-2">Tùy chọn giá (đơn vị: triệu)</h6>
+                              <div className="d-flex">
+                                <div className="me-2 flex-grow-1">
+                                  <Form.Control
+                                    type="number"
+                                    placeholder="Từ"
+                                    size="sm"
+                                    value={minPriceInput}
+                                    onChange={(e) => {
+                                      setMinPriceInput(e.target.value);
+                                      setPriceRange("custom");
+                                    }}
+                                  />
+                                </div>
+                                <div className="me-2">-</div>
+                                <div className="flex-grow-1">
+                                  <Form.Control
+                                    type="number"
+                                    placeholder="Đến"
+                                    size="sm"
+                                    value={maxPriceInput}
+                                    onChange={(e) => {
+                                      setMaxPriceInput(e.target.value);
+                                      setPriceRange("custom");
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </Dropdown.Menu>
                       </Dropdown>
                     </div>
-                  </div>
-
-                  {/* Dien tich */}
-                  <div
-                    className="flex-grow-1 px-1 position-relative"
-                    style={{ maxWidth: "270px" }}
-                  >
-                    <div className="input-group rounded-3 h-100">
-                      <Dropdown className="w-100 h-100">
-                        <Dropdown.Toggle className="bg-white text-secondary border-0 w-100 h-100 text-start d-flex align-items-center justify-content-between">
+                                         
+                    {/* Area Range */}
+                    <div className="mb-2">
+                      <Dropdown className="w-100">
+                        <Dropdown.Toggle className="bg-white text-secondary border-0 w-100 text-start d-flex align-items-center justify-content-between">
                           <span className="input-group-text bg-white border-0">
                             <span style={{ color: "#0046a8" }}>m²</span>
                           </span>
                           <span className="text-start w-100">
                             {areaLabelMap[areaRange] || "Diện tích"}
                           </span>
-
-                          <span>▼</span>
                         </Dropdown.Toggle>
-
-                        <Dropdown.Menu
-                          className="w-100 p-3"
-                          style={{ zIndex: 1050 }}
-                        >
-                          {Object.entries(areaLabelMap).map(
-                            ([value, label]) => (
+                        
+                        {/* Dropdown Menu cho diện tích */}
+                        <Dropdown.Menu className="w-100">
+                          <div className="p-3">
+                            <h6 className="mb-3">Chọn diện tích</h6>
+                            
+                            {Object.keys(areaLabelMap).map((area) => (
                               <Form.Check
-                                key={value}
+                                key={area}
                                 type="radio"
-                                id={value}
-                                name="area-range"
-                                label={label}
-                                checked={areaRange === value}
-                                onChange={handleAreaRangeChange}
+                                id={area}
+                                name="areaRange"
+                                label={areaLabelMap[area]}
+                                checked={areaRange === area}
+                                onChange={(e) => handleAreaRangeChange(e)}
                                 className="mb-2"
                               />
-                            )
-                          )}
-
-                          <div className="d-flex justify-content-between p-2">
-                            <Button
-                              variant="link"
-                              className="text-decoration-none d-flex align-items-center"
-                              onClick={resetAreaFilters}
-                            >
-                              <i className="bi bi-arrow-repeat me-1"></i> Đặt
-                              lại
-                            </Button>
-                            <Button onClick={handleSearch} variant="primary">
-                              Tìm ngay
-                            </Button>
+                            ))}
                           </div>
                         </Dropdown.Menu>
                       </Dropdown>
                     </div>
+                    
+                    {/* Search button full width on mobile */}
+                    <div className="mt-2">
+                      <Button
+                        variant="danger"
+                        className="py-2 w-100 border-0 rounded-3 fw-bold"
+                        style={{ backgroundColor: "#ff5a00" }}
+                        onClick={handleSearch}
+                      >
+                        <FaSearch className="me-2" /> Tìm kiếm
+                      </Button>
+                    </div>
                   </div>
-                  {/* Button tim kiem */}
-                  <div className="flex-shrink-0 px-1 d-flex align-items-stretch">
-                    <Button
-                      variant="danger"
-                      className="py-2 px-4 border-0 rounded-3 fw-bold h-100"
-                      style={{ backgroundColor: "#ff5a00" }}
-                      onClick={handleSearch}
-                    >
-                      <FaSearch className="me-2" /> Tìm kiếm
-                    </Button>
+                ) : (
+                  // Desktop horizontal filters
+                  <div
+                    className="d-flex p-2 align-items-stretch"
+                    style={{
+                      backgroundColor: "#0046a8",
+                      borderRadius: "0 0 8px 8px",
+                    }}
+                  >
+                    {/* Input: Ban muon tim tro o dau */}
+                    <div className="flex-grow-1 px-1" style={{ maxWidth: "270px" }}>
+                      <div className="input-group rounded-3 overflow-hidden h-100">
+                        <span className="input-group-text bg-white border-0 h-100 d-flex align-items-center">
+                          <FaSearch color="#0046a8" />
+                        </span>
+                        <Form.Control
+                          type="text"
+                          placeholder="Bạn muốn tìm trọ ở đâu?"
+                          className="border-0 py-2"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Location */}
+                    <div className="flex-grow-1 px-1" style={{ maxWidth: "270px" }}>
+                      <Dropdown className="h-100">
+                        <Dropdown.Toggle className="btn bg-white text-secondary border-0 w-100 h-100 text-start d-flex align-items-center justify-content-between dropdown-toggle">
+                          <div className="d-flex align-items-center">
+                            <span className="input-group-text bg-white border-0 p-0 me-3 ms-3">
+                              <FaMap color="#0046a8" />
+                            </span>
+                            {selectedWard ? (
+                              <span className="text-truncate">
+                                {wards.find((w) => w.code === selectedWard)?.name || ""}
+                              </span>
+                            ) : selectedDistrict ? (
+                              <span className="text-truncate">
+                                {districts.find((d) => d.code === selectedDistrict)?.name || ""}
+                              </span>
+                            ) : selectedProvince ? (
+                              <span className="text-truncate">
+                                {provinces.find((p) => p.code === selectedProvince)?.name || ""}
+                              </span>
+                            ) : (
+                              <span>Địa điểm</span>
+                            )}
+                          </div>
+                        </Dropdown.Toggle>
+                        
+                        {/* Location dropdown menu */}
+                        <Dropdown.Menu className="w-100 shadow border-0 p-0 mt-1" style={{ minWidth: "300px" }}>
+                          <div className="p-3">
+                            <h6 className="fw-bold text-primary mb-3">Chọn khu vực</h6>
+                            
+                            <Form.Group controlId="desktop-province" className="mb-3">
+                              <Form.Label className="text-dark mb-1 fw-bold small">Tỉnh/Thành phố</Form.Label>
+                              <Form.Select
+                                value={selectedProvince}
+                                onChange={(e) => setSelectedProvince(e.target.value)}
+                                className="form-select"
+                                style={{ fontSize: '14px', borderColor: '#dee2e6', padding: '8px 12px' }}
+                              >
+                                <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                {provinces.map((province) => (
+                                  <option key={province.code} value={province.code}>
+                                    {province.name}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                            
+                            <Form.Group controlId="desktop-district" className="mb-3">
+                              <Form.Label className="text-dark mb-1 fw-bold small">Quận/Huyện</Form.Label>
+                              <Form.Select
+                                value={selectedDistrict}
+                                onChange={(e) => setSelectedDistrict(e.target.value)}
+                                disabled={!selectedProvince}
+                                className={`form-select ${!selectedProvince ? 'bg-light' : ''}`}
+                                style={{ fontSize: '14px', borderColor: '#dee2e6', padding: '8px 12px' }}
+                              >
+                                <option value="">-- Chọn Quận/Huyện --</option>
+                                {districts.map((district) => (
+                                  <option key={district.code} value={district.code}>
+                                    {district.name}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                            
+                            <Form.Group controlId="desktop-ward" className="mb-3">
+                              <Form.Label className="text-dark mb-1 fw-bold small">Phường/Xã</Form.Label>
+                              <Form.Select
+                                value={selectedWard}
+                                onChange={(e) => setSelectedWard(e.target.value)}
+                                disabled={!selectedDistrict}
+                                className={`form-select ${!selectedDistrict ? 'bg-light' : ''}`}
+                                style={{ fontSize: '14px', borderColor: '#dee2e6', padding: '8px 12px' }}
+                              >
+                                <option value="">-- Chọn Phường/Xã --</option>
+                                {wards.map((ward) => (
+                                  <option key={ward.code} value={ward.code}>
+                                    {ward.name}
+                                  </option>
+                                ))}
+                              </Form.Select>
+                            </Form.Group>
+                            
+                            <div className="d-flex justify-content-end">
+                              <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                className="me-2"
+                                onClick={resetLocationSelections}
+                              >
+                                Đặt lại
+                              </Button>
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => {
+                                  // Đóng dropdown sau khi chọn xong
+                                  document.body.click();
+                                }}
+                              >
+                                Xác nhận
+                              </Button>
+                            </div>
+                          </div>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </div>
+                    
+                    {/* Price */}
+                    <div className="flex-grow-1 px-1" style={{ maxWidth: "270px" }}>
+                      <Dropdown className="h-100">
+                        <Dropdown.Toggle className="bg-white text-secondary border-0 w-100 h-100 text-start d-flex align-items-center">
+                          <span className="input-group-text bg-white border-0">
+                            <FaDollarSign color="#0046a8" />
+                          </span>
+                          <span className="text-start w-100 ms-2">
+                            {minPriceInput || maxPriceInput
+                              ? `${minPriceInput || "0"} → ${maxPriceInput || "∞"} triệu`
+                              : priceLabelMap[priceRange] || "Mức giá"}
+                          </span>
+                        </Dropdown.Toggle>
+                        
+                        {/* Price dropdown menu */}
+                        <Dropdown.Menu className="w-100">
+                          <div className="p-3">
+                            <h6 className="mb-3">Chọn mức giá</h6>
+                            
+                            {/* Mức giá mặc định */}
+                            <div className="mb-3">
+                              {Object.keys(priceLabelMap).map((price) => (
+                                <Form.Check
+                                  key={price}
+                                  type="radio"
+                                  id={price}
+                                  name="priceRange"
+                                  label={priceLabelMap[price]}
+                                  checked={priceRange === price}
+                                  onChange={() => {
+                                    setPriceRange(price);
+                                    setMinPriceInput("");
+                                    setMaxPriceInput("");
+                                  }}
+                                  className="mb-2"
+                                />
+                              ))}
+                            </div>
+                            
+                            {/* Tùy chọn giá */}
+                            <div className="mb-3">
+                              <h6 className="small fw-bold mb-2">Tùy chọn giá (đơn vị: triệu)</h6>
+                              <div className="d-flex">
+                                <div className="me-2 flex-grow-1">
+                                  <Form.Control
+                                    type="number"
+                                    placeholder="Từ"
+                                    size="sm"
+                                    value={minPriceInput}
+                                    onChange={(e) => {
+                                      setMinPriceInput(e.target.value);
+                                      setPriceRange("custom");
+                                    }}
+                                  />
+                                </div>
+                                <div className="me-2">-</div>
+                                <div className="flex-grow-1">
+                                  <Form.Control
+                                    type="number"
+                                    placeholder="Đến"
+                                    size="sm"
+                                    value={maxPriceInput}
+                                    onChange={(e) => {
+                                      setMaxPriceInput(e.target.value);
+                                      setPriceRange("custom");
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </div>
+                    
+                    {/* Area */}
+                    <div className="flex-grow-1 px-1" style={{ maxWidth: "270px" }}>
+                      <Dropdown className="h-100">
+                        <Dropdown.Toggle className="bg-white text-secondary border-0 w-100 h-100 text-start d-flex align-items-center">
+                          <span className="input-group-text bg-white border-0">
+                            <span style={{ color: "#0046a8" }}>m²</span>
+                          </span>
+                          <span className="text-start w-100 ms-2">
+                            {areaLabelMap[areaRange] || "Diện tích"}
+                          </span>
+                        </Dropdown.Toggle>
+                        
+                        {/* Area dropdown menu */}
+                        <Dropdown.Menu className="w-100">
+                          <div className="p-3">
+                            <h6 className="mb-3">Chọn diện tích</h6>
+                            
+                            {Object.keys(areaLabelMap).map((area) => (
+                              <Form.Check
+                                key={area}
+                                type="radio"
+                                id={area}
+                                name="areaRange"
+                                label={areaLabelMap[area]}
+                                checked={areaRange === area}
+                                onChange={(e) => handleAreaRangeChange(e)}
+                                className="mb-2"
+                              />
+                            ))}
+                          </div>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </div>
+                    
+                    {/* Button tim kiem */}
+                    <div className="flex-shrink-0 px-1 d-flex align-items-stretch">
+                      <Button
+                        variant="danger"
+                        className="py-2 px-4 border-0 rounded-3 fw-bold h-100"
+                        style={{ backgroundColor: "#ff5a00" }}
+                        onClick={handleSearch}
+                      >
+                        <FaSearch className="me-2" /> Tìm kiếm
+                      </Button>
+                    </div>
                   </div>
-                </div>
+                )}
               </Col>
             </Row>
           </div>
@@ -814,7 +1005,7 @@ const HomePage = () => {
       {/* Banner Section with Images */}
       <Container className="mt-4" style={{ position: "relative", zIndex: 1 }}>
         <Row className="g-3 mb-5">
-          <Col md={4}>
+          <Col md={4} sm={12} className="mb-3 mb-md-0">
             <div className="bg-primary bg-opacity-10 rounded p-2 text-center">
               <img
                 src="https://tromoi.com/frontend/home/images/banners/banner_tang_30.webp"
@@ -823,7 +1014,7 @@ const HomePage = () => {
               />
             </div>
           </Col>
-          <Col md={4}>
+          <Col md={4} sm={6} className="mb-3 mb-md-0">
             <div className="bg-primary bg-opacity-10 rounded p-2 text-center">
               <img
                 src="https://tromoi.com/frontend/home/images/banners/banner_dang_tro_nhanh.jpg"
@@ -832,7 +1023,7 @@ const HomePage = () => {
               />
             </div>
           </Col>
-          <Col md={4}>
+          <Col md={4} sm={6}>
             <div className="bg-primary bg-opacity-10 rounded p-2 text-center">
               <img
                 src="https://tromoi.com/frontend/home/images/banners/banner_video_review.jpg"

@@ -167,11 +167,12 @@ const HotListings: React.FC<HotListingsProps> = ({
               <Row key={rowIndex} className="mb-4 g-3">
                 {paddedItems.map((listing, index) => (
                   <Col
-                    key={index} 
-                    xs={12}        // Mobile: 1 cột (12/12)
-                    sm={isTablet ? 4 : 12}  // Small devices: tablet sử dụng 3 cột (12/4=3), mobile vẫn 1 cột
-                    md={isTablet ? 4 : 12}  // Medium devices: giữ nguyên
-                    lg={isTablet ? 4 : 12/5} // Large devices: tablet sử dụng 3 cột (12/4=3), desktop sử dụng 5 cột (12/5=2.4)
+                    key={index}
+                    xs={12}      // Mobile: 1 cột
+                    sm={12}      // Small screens: vẫn 1 cột
+                    md={4}       // Tablet: 3 cột (md=4 tương đương 33.33% width)
+                    className="position-relative room-column"
+                    style={!isMobile && !isTablet ? { flex: '0 0 20%', maxWidth: '20%' } : {}}
                   >
                     {listing ? (
                       <Link 
