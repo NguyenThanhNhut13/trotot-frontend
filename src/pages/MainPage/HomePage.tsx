@@ -16,10 +16,9 @@ import { FaDollarSign, FaMap, FaSearch } from "react-icons/fa";
 import addressAPI from "../../apis/address.api";
 import { District, Province, Ward } from "../../types/address.type";
 import LoginModal from "../../pages/Login/LoginModal";
-import roomApi from "../../apis/room.api";
-import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { fetchRoomsByType } from "../../store/slices/roomListingsSlice";
+import { selectLastFetched, selectListingsByType } from "../../store/selectors/roomListings.selectors";
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -46,11 +45,11 @@ const HomePage = () => {
   const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
 
   const apartmentListings = useAppSelector(state => 
-    state.roomListings.listingsByType?.APARTMENT || []
+    selectListingsByType(state, 'APARTMENT')
   );
-
+  
   const apartmentLastFetched = useAppSelector(state => 
-    state.roomListings.lastFetched?.APARTMENT
+    selectLastFetched(state, 'APARTMENT')
   );
 
   // useEffect(() => {

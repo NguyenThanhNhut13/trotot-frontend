@@ -79,7 +79,7 @@ export const fetchRoomsByType = createAsyncThunk(
         };
       });
       
-      return { roomType, listings: mapped };
+      return { roomType, listings: mapped, fromCache: false };
     } catch (error) {
       return rejectWithValue(error);
     }

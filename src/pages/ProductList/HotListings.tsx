@@ -1,12 +1,16 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Card, Button, Row, Col, Spinner } from "react-bootstrap";
-import roomApi from "../../apis/room.api"; // update path if needed
-import { Room } from "../../types/room.type"; // kiểu gốc từ API
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { fetchRoomsByType, fetchSavedRoomIds, saveRoom, unsaveRoom } from "../../store/slices/roomListingsSlice";
 import { Link, useNavigate } from "react-router-dom";
+import { 
+  selectListingsByType,  
+  selectLoadingStatus, 
+  selectError,
+  selectSavedRoomIds 
+} from '../../store/selectors/roomListings.selectors';
 
 interface Listing {
   id: number;
@@ -37,19 +41,23 @@ const HotListings: React.FC<HotListingsProps> = ({
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
+  // Use memoized selectors
+  const listings = useAppSelector(state => 
+    selectListingsByType(state, roomType)
+  );
+  
+  const loading = useAppSelector(state => 
+    selectLoadingStatus(state, roomType)
+  );
+  
+  const error = useAppSelector(state => 
+    selectError(state, roomType)
+  );
+
+  const savedRoomIds = useAppSelector(selectSavedRoomIds);
+
   const { isAuthenticated } = useAppSelector(state => state.auth);
   
-  const listings = useAppSelector(state => 
-    roomType ? state.roomListings.listingsByType[roomType] || [] : []
-  );
-  const loading = useAppSelector(state => 
-    roomType ? state.roomListings.loading[roomType] || false : false
-  );
-  const error = useAppSelector(state => 
-    roomType ? state.roomListings.error[roomType] || null : null
-  );
-  const savedRoomIds = useAppSelector(state => state.roomListings.savedRoomIds);
-
   // Helper function to create dummy empty listings if count is less than 5
   const ensureMinimumItems = (listings: Listing[], minCount: number = 5) => {
     if (listings.length >= minCount) return listings;
