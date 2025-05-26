@@ -54,33 +54,29 @@ const HomePage = () => {
   //   trainAI();
   // })
 
-  // Add this function to your component
-  const handleSaveRoom = (roomId: number) => {
-    const isLoggedIn = localStorage.getItem("accessToken");
+  useEffect(() => {
+    // Load provinces
+    const fetchProvinces = async () => {
+      try {
+        const response = await addressAPI.getProvinces();
+        setProvinces(response.data.data.data as Province[]);
+      } catch (error) {
+        console.error("Error fetching provinces:", error);
+      }
+    };
     
-    if (!isLoggedIn) {
-      // Store pending action and room ID
-      localStorage.setItem("pendingAction", "save-room");
-      localStorage.setItem("pendingRoomId", roomId.toString());
-      
-      // Show login modal
-      setShowLoginModal(true);
-      setPendingRoomId(roomId.toString());
-      return;
-    }
-    
-    // User is logged in, proceed with save
-    roomApi.addToWishList(roomId)
-      .then(() => {
-        toast.success("Đã lưu phòng thành công");
-      })
-      .catch(error => {
-        console.error("Error saving room:", error);
-        toast.error("Có lỗi xảy ra. Vui lòng thử lại sau.");
-      });
-  };
+    fetchProvinces();
+  }, []);
 
-  // Add this function to your component
+  // Handle saving rooms (shows login modal for unauthenticated users)
+  const handleSaveRoom = (roomId: number) => {
+    localStorage.setItem("pendingAction", "save-room");
+    localStorage.setItem("pendingRoomId", roomId.toString());
+    setPendingRoomId(roomId.toString());
+    setShowLoginModal(true);
+  };
+  
+  // Handle login modal close
   const handleLoginModalClose = () => {
     setShowLoginModal(false);
   };

@@ -5,6 +5,7 @@ import wishlistReducer from './slices/wishlistSlice'
 import roomReducer from './slices/roomSlice'
 import paymentReducer from './slices/paymentSlice'
 import reviewReducer from './slices/reviewSlice'
+import roomListingsReducer from './slices/roomListingsSlice'
 
 export const store = configureStore({
   reducer: {
@@ -14,6 +15,7 @@ export const store = configureStore({
     room: roomReducer,
     payment: paymentReducer,
     review: reviewReducer,
+    roomListings: roomListingsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

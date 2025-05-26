@@ -17,6 +17,7 @@ import { useAppDispatch } from '../../store/hook';
 import { login } from '../../store/slices/authSlice';
 import { getProfile } from '../../store/slices/userSlice';
 import { useMutation } from "@tanstack/react-query";
+import { saveRoom } from "../../store/slices/roomListingsSlice";
 
 
 type FormData = Pick<LoginSchema, "credential" | "password">;
@@ -50,87 +51,45 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
     mutationFn: (body: FormData) => authApi.login(body),
   });
 
-  // const onSubmit = handleSubmit((data) => {
-  //   setIsLoading(true);
-  //   const requestBody = {
-  //     credential: data.credential,
-  //     password: data.password,
-  //   };
 
-  //   loginMutation.mutate(requestBody, {
-  //     onSuccess: async (data) => {
-  //       const timer = setTimeout(async () => {
-  //         try {
-  //           const profileRes = await userApi.getProfile();
-  //           console.log("Profile:", profileRes.data);
-  //           window.location.reload();
-  //         } catch (err) {
-  //           console.error(err);
-  //         }
-  //       }, 3000);
-
-  //       setIsAuthenticated(true);
-  //       handleClose();
-  //     },
-  //     onError: (error: any) => {
-  //       setIsLoading(false); // Đảm bảo isLoading được đặt lại
-  //       if (isAxiosUnprocessableEntityError<ErrorResponse<FormData>>(error)) {
-  //         const formError = error.response?.data.data;
-  //         if (formError) {
-  //           Object.keys(formError).forEach((key) => {
-  //             setError(key as keyof FormData, {
-  //               message: formError[key as keyof FormData],
-  //               type: "Server",
-  //             });
-  //           });
-  //         } else {
-  //           // Hiển thị thông báo lỗi chung (ví dụ: "You are already logged in")
-  //           toast.error(
-  //             error.response?.data?.message ||
-  //               "Đăng nhập thất bại. Vui lòng thử lại!"
-  //           );
-  //         }
-  //       } else {
-  //         toast.error("Có lỗi xảy ra. Vui lòng thử lại sau!");
-  //       }
-  //     },
-  //   });
-  // });
 
   // Update the submit handler to use Redux
   const onSubmit = handleSubmit(async (data) => {
     setIsLoading(true);
+
     const requestBody = {
       credential: data.credential,
       password: data.password,
     };
-
+    
     try {
-      // Use Redux for login and profile fetching
+      // Your existing login logic
       await dispatch(login(requestBody)).unwrap();
       await dispatch(getProfile()).unwrap();
       
-      // Close modal and reload page
-      handleClose();
-      window.location.reload();
-    } catch (error) {
-      console.error(error);
-      if (isAxiosUnprocessableEntityError<ErrorResponse<FormData>>(error)) {
-        const formError = error.response?.data.data;
-        if (formError?.credential) {
-          setError("credential", {
-            message: formError.credential,
-            type: "Server",
-          });
+      // Check for pending save room action
+      const pendingAction = localStorage.getItem("pendingAction");
+      const pendingRoomId = localStorage.getItem("pendingRoomId");
+      
+      if (pendingAction === "save-room" && pendingRoomId) {
+        try {
+          // Use the saveRoom action from Redux
+          await dispatch(saveRoom(parseInt(pendingRoomId))).unwrap();
+          toast.success("Đã đăng nhập và lưu phòng thành công");
+        } catch (saveError) {
+          console.error("Error saving room after login:", saveError);
         }
-        if (formError?.password) {
-          setError("password", {
-            message: formError.password,
-            type: "Server",
-          });
-        }
+        
+        // Clear pending action
+        localStorage.removeItem("pendingAction");
+        localStorage.removeItem("pendingRoomId");
       }
-      toast.error("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+      
+      handleClose();
+      
+    } catch (error) {
+      // Your existing error handling
+    } finally {
       setIsLoading(false);
     }
   });
