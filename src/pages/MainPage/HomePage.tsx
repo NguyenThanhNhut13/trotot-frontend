@@ -16,11 +16,12 @@ import { FaDollarSign, FaMap, FaSearch } from "react-icons/fa";
 import addressAPI from "../../apis/address.api";
 import { District, Province, Ward } from "../../types/address.type";
 import LoginModal from "../../pages/Login/LoginModal";
-import { useAppDispatch, useAppSelector } from "../../store/hook";
+import { useAppDispatch, useAppSelector, useResponsive } from "../../store/hook";
 import { fetchRoomsByType } from "../../store/slices/roomListingsSlice";
 import { selectLastFetched, selectListingsByType } from "../../store/selectors/roomListings.selectors";
 
 const HomePage = () => {
+  const { isMobile, isTablet } = useResponsive();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [selectedCategory, setSelectedCategory] = useState("tat-ca");

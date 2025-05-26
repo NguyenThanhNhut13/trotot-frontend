@@ -36,3 +36,25 @@
     transform: rotate(360deg);
   }
 }
+
+/* Mobile first approach */
+.room-card {
+  padding: 10px;
+  margin-bottom: 15px;
+}
+
+/* Máy tính bảng */
+@media (min-width: 768px) {
+  .room-card {
+    padding: 15px;
+    margin-bottom: 20px;
+  }
+}
+
+/* Desktop */
+@media (min-width: 992px) {
+  .room-card {
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+}

@@ -36,8 +36,10 @@ import addressAPI from "../../apis/address.api";
 import { get, set } from "lodash";
 import { fallbackGeocode, getDefaultCoordinates, retryApiCall } from "../../utils/geocodingFallback";
 import LoginModal from "../../pages/Login/LoginModal";
+import { useResponsive } from "../../store/hook";
 
 export default function DetailRoom() {
+  const { isMobile, isTablet } = useResponsive();
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [room, setRoom] = useState<RoomGetByID | null>(null);

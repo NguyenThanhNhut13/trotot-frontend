@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { Card, Button, Row, Col, Spinner } from "react-bootstrap";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { useAppDispatch, useAppSelector } from "../../store/hook";
+import { useAppDispatch, useAppSelector, useResponsive } from "../../store/hook";
 import { fetchRoomsByType, fetchSavedRoomIds, saveRoom, unsaveRoom } from "../../store/slices/roomListingsSlice";
 import { Link, useNavigate } from "react-router-dom";
 import { 
@@ -40,6 +40,11 @@ const HotListings: React.FC<HotListingsProps> = ({
 }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+
+  const { isMobile, isTablet } = useResponsive();
+  
+  // Điều chỉnh số lượng cột hiển thị tùy theo kích thước màn hình
+  const cardsPerRow = isMobile ? 1 : isTablet ? 3 : 5;
 
   // Use memoized selectors
   const listings = useAppSelector(state => 
@@ -125,7 +130,7 @@ const HotListings: React.FC<HotListingsProps> = ({
       <h2
         className="fw-bold"
         style={{
-          fontSize: "24px",
+          fontSize: isMobile ? "20px" : "24px",
           textTransform: "uppercase",
           lineHeight: 1.5,
           color: "#113f9d",
@@ -147,10 +152,13 @@ const HotListings: React.FC<HotListingsProps> = ({
         </div>
       ) : (
         Array.from(
-          { length: Math.ceil(listings.length / 5) },
+          { length: Math.ceil(listings.length / cardsPerRow) },
           (_, rowIndex) => {
             // Get current slice of listings for this row
-            const rowItems = listings.slice(rowIndex * 5, rowIndex * 5 + 5);
+            const rowItems = listings.slice(
+              rowIndex * cardsPerRow,
+              (rowIndex + 1) * cardsPerRow
+            );
 
             // Ensure we always have 5 items (some may be null)
             const paddedItems = ensureMinimumItems(rowItems);
@@ -158,7 +166,13 @@ const HotListings: React.FC<HotListingsProps> = ({
             return (
               <Row key={rowIndex} className="mb-4 g-3">
                 {paddedItems.map((listing, index) => (
-                  <Col key={index} style={{ width: "20%" }}>
+                  <Col
+                    key={index} 
+                    xs={12}        // Mobile: 1 cột (12/12)
+                    sm={isTablet ? 4 : 12}  // Small devices: tablet sử dụng 3 cột (12/4=3), mobile vẫn 1 cột
+                    md={isTablet ? 4 : 12}  // Medium devices: giữ nguyên
+                    lg={isTablet ? 4 : 12/5} // Large devices: tablet sử dụng 3 cột (12/4=3), desktop sử dụng 5 cột (12/5=2.4)
+                  >
                     {listing ? (
                       <Link 
                         to={`/phong-tro/${listing.id}`}
@@ -211,7 +225,10 @@ const HotListings: React.FC<HotListingsProps> = ({
                             variant="top"
                             src={listing.image}
                             alt={listing.title}
-                            style={{ height: "180px", objectFit: "cover" }}
+                            style={{ 
+                              height: isMobile ? "150px" : "180px", 
+                              objectFit: "cover" 
+                             }}
                           />
 
                           <Card.Body className="p-3">
@@ -225,7 +242,7 @@ const HotListings: React.FC<HotListingsProps> = ({
                             <div className="d-flex justify-content-between align-items-center mb-2">
                               <div
                                 className="text-danger fw-bold"
-                                style={{ fontSize: "1.1rem" }}
+                                style={{ fontSize: isMobile ? "0.9rem" : "1.1rem" }}
                               >
                                 {parseFloat(
                                   listing.price.replace(/[^\d.]/g, "")
