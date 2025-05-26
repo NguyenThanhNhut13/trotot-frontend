@@ -6,6 +6,7 @@ import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAppDispatch, useAppSelector } from "../../store/hook";
 import { fetchRoomsByType, fetchSavedRoomIds, saveRoom, unsaveRoom } from "../../store/slices/roomListingsSlice";
+import { Link, useNavigate } from "react-router-dom";
 
 interface Listing {
   id: number;
@@ -34,6 +35,8 @@ const HotListings: React.FC<HotListingsProps> = ({
   onSaveRoom 
 }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+
   const { isAuthenticated } = useAppSelector(state => state.auth);
   
   const listings = useAppSelector(state => 
@@ -149,87 +152,95 @@ const HotListings: React.FC<HotListingsProps> = ({
                 {paddedItems.map((listing, index) => (
                   <Col key={index} style={{ width: "20%" }}>
                     {listing ? (
-                      <Card
-                        key={listing.id}
-                        className="h-100 border-0 shadow-sm position-relative"
-                        onClick={() => {
-                          window.location.href = `/phong-tro/${listing.id}`;
+                      <Link 
+                        to={`/phong-tro/${listing.id}`}
+                        className="text-decoration-none"
+                        onClick={(e) => {
+                          // Ngăn không cho Link kích hoạt nếu click vào icon heart
+                          if ((e.target as HTMLElement).closest('.heart-icon')) {
+                            e.preventDefault();
+                          }
                         }}
                       >
-                        {/* HOT Label */}
-                        <div
-                          className="position-absolute bg-danger text-white px-2 py-1 fw-bold"
-                          style={{
-                            top: "10px",
-                            left: "0",
-                            zIndex: 1,
-                            fontSize: "0.7rem",
-                          }}
+                        <Card
+                          key={listing.id}
+                          className="h-100 border-0 shadow-sm position-relative"
                         >
-                          HOT
-                        </div>
-
-                        {/* Favorite Heart Icon */}
-                        <div
-                          className="position-absolute bg-white rounded-circle p-1 d-flex justify-content-center align-items-center"
-                          style={{
-                            top: "10px",
-                            right: "10px",
-                            width: "28px",
-                            height: "28px",
-                            zIndex: 1,
-                            cursor: "pointer",
-                          }}
-                          onClick={(e) => handleSaveRoom(e, listing.id)}
-                        >
-                          {savedRoomIds.includes(listing.id) ? (
-                            <FaHeart className="text-danger" size={16} />
-                          ) : (
-                            <FaRegHeart size={16} />
-                          )}
-                        </div>
-
-                        <Card.Img
-                          variant="top"
-                          src={listing.image}
-                          alt={listing.title}
-                          style={{ height: "180px", objectFit: "cover" }}
-                        />
-
-                        <Card.Body className="p-3">
-                          <Card.Title
-                            className="text-truncate mb-2"
-                            style={{ fontSize: "0.95rem", fontWeight: "bold" }}
-                          >
-                            {listing.title}
-                          </Card.Title>
-
-                          <div className="d-flex justify-content-between align-items-center mb-2">
-                            <div
-                              className="text-danger fw-bold"
-                              style={{ fontSize: "1.1rem" }}
-                            >
-                              {parseFloat(
-                                listing.price.replace(/[^\d.]/g, "")
-                              ).toLocaleString()}{" "}
-                              triệu/tháng
-                            </div>
-                            <div className="text-muted">
-                              {listing.area}m<sup>2</sup>
-                            </div>
-                          </div>
-
+                          {/* HOT Label */}
                           <div
-                            className="d-flex align-items-center text-muted"
-                            style={{ fontSize: "0.85rem" }}
+                            className="position-absolute bg-danger text-white px-2 py-1 fw-bold"
+                            style={{
+                              top: "10px",
+                              left: "0",
+                              zIndex: 1,
+                              fontSize: "0.7rem",
+                            }}
                           >
-                            <i className="fas fa-map-marker-alt me-1"></i>
-                            <div className="text-truncate">
-                              {listing.location}
-                            </div>
+                            HOT
                           </div>
-                        </Card.Body>
-                      </Card>
+
+                          {/* Favorite Heart Icon */}
+                          <div
+                            className="position-absolute bg-white rounded-circle p-1 d-flex justify-content-center align-items-center heart-icon"
+                            style={{
+                              top: "10px",
+                              right: "10px",
+                              width: "28px",
+                              height: "28px",
+                              zIndex: 2, // Higher than card
+                              cursor: "pointer",
+                            }}
+                            onClick={(e) => handleSaveRoom(e, listing.id)}
+                          >
+                            {savedRoomIds.includes(listing.id) ? (
+                              <FaHeart className="text-danger" size={16} />
+                            ) : (
+                              <FaRegHeart size={16} />
+                            )}
+                          </div>
+
+                          <Card.Img
+                            variant="top"
+                            src={listing.image}
+                            alt={listing.title}
+                            style={{ height: "180px", objectFit: "cover" }}
+                          />
+
+                          <Card.Body className="p-3">
+                            <Card.Title
+                              className="text-truncate mb-2"
+                              style={{ fontSize: "0.95rem", fontWeight: "bold" }}
+                            >
+                              {listing.title}
+                            </Card.Title>
+
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                              <div
+                                className="text-danger fw-bold"
+                                style={{ fontSize: "1.1rem" }}
+                              >
+                                {parseFloat(
+                                  listing.price.replace(/[^\d.]/g, "")
+                                ).toLocaleString()}{" "}
+                                triệu/tháng
+                              </div>
+                              <div className="text-muted">
+                                {listing.area}m<sup>2</sup>
+                              </div>
+                            </div>
+
+                            <div
+                              className="d-flex align-items-center text-muted"
+                              style={{ fontSize: "0.85rem" }}
+                            >
+                              <i className="fas fa-map-marker-alt me-1"></i>
+                              <div className="text-truncate">
+                                {listing.location}
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Link>
                     ) : (
                       // Render an empty column to maintain layout
                       <div></div>
@@ -243,10 +254,8 @@ const HotListings: React.FC<HotListingsProps> = ({
       )}
 
       <div className="mt-3 d-flex justify-content-center">
-        <Button
-          variant="outline-primary"
-          className="px-4"
-          href={
+        <Link
+          to={
             roomType === "BOARDING_HOUSE"
               ? "/category/nha-tro-phong-tro"
               : roomType === "APARTMENT"
@@ -255,9 +264,10 @@ const HotListings: React.FC<HotListingsProps> = ({
               ? "/category/nha-nguyen-can"
               : "/category/all"
           }
+          className="btn btn-outline-primary px-4"
         >
           Xem tất cả <i className="fas fa-arrow-right ms-1"></i>
-        </Button>
+        </Link>
       </div>
     </div>
   );

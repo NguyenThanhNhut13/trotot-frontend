@@ -16,22 +16,8 @@ import DetailRoom from "./pages/Navigation/DetailRoom";
 import HistoryPage from "./pages/PayPage/HistoryPage";
 import ManageReviewsPage from "./pages/Navigation/ManageReviewsPage";
 import ManagerPost from "./pages/AdminPage/ManagerPost";
-import { useAppDispatch, useAppSelector } from './store/hook';
-import { getProfile } from './store/slices/userSlice';
-import { getSavedRoomIds } from './store/slices/wishlistSlice';
-
 
 export default function useRouteElement() {
-  const dispatch = useAppDispatch();
-  const { isAuthenticated } = useAppSelector(state => state.auth);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      dispatch(getProfile());
-      dispatch(getSavedRoomIds());
-    }
-  }, [dispatch, isAuthenticated]);
-
   const routeElement = useRoutes([
     {
       path: "/",

@@ -10,7 +10,7 @@ import {
   Spinner,
   Nav,
 } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaSearch, FaMapMarkerAlt, FaHeart } from "react-icons/fa";
 import {
   Amenity,
@@ -26,6 +26,7 @@ const AllCategoriesPage = () => {
   const [activeTab, setActiveTab] = useState<
     "BOARDING_HOUSE" | "WHOLE_HOUSE" | "APARTMENT" | null
   >(null);
+  const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [searchTerm, setSearchTerm] = useState("");

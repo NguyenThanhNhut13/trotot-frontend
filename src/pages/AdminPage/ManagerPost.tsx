@@ -101,7 +101,7 @@ export default function ManagerPost() {
   };
 
   const handleView = (roomId: number) => {
-    window.location.href = `/phong-tro/${roomId}`;
+    navigate(`/phong-tro/${roomId}`); 
   };
 
   const handleDelete = async (roomId: number) => {

@@ -8,7 +8,7 @@ import {
   Dropdown,
   Spinner,
 } from "react-bootstrap";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { FaSearch, FaMapMarkerAlt, FaHeart } from "react-icons/fa";
 import {
   Amenity,
@@ -47,6 +47,7 @@ const priceLabelMap: Record<string, string> = {
 };
 
 const CategorySharedPage = ({ title, roomType }: Props) => {
+  const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -1035,7 +1036,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
                 localStorage.removeItem("searchParams");
                 setSearchParams(null);
                 setFilteredListings(listings);
-                window.location.reload();
+                navigate(0);
               }}
             >
               Xóa bộ lọc

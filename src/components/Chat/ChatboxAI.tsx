@@ -3,6 +3,7 @@ import { Button, Card, Form, InputGroup, Spinner } from "react-bootstrap";
 import { FaComments, FaPaperPlane, FaTimes, FaHome } from "react-icons/fa";
 import chatboxAI from "../../apis/chatboxAI.api";
 import "./ChatboxAI.css";
+import { useNavigate } from "react-router-dom";
 
 interface Message {
   sender: "user" | "bot";
@@ -20,6 +21,7 @@ interface RoomSuggestion {
 
 const ChatboxAI: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
@@ -144,7 +146,7 @@ const ChatboxAI: React.FC = () => {
   };
 
   const goToRoomDetail = (roomId: number) => {
-    window.location.href = `/phong-tro/${roomId}`;
+    navigate(`/phong-tro/${roomId}`); 
   };
 
   return (

@@ -15,6 +15,7 @@ interface RoomListingsState {
   listingsByType: Record<string, Listing[]>;
   loading: Record<string, boolean>;
   error: Record<string, string | null>;
+  lastFetched?: Record<string, number>;
   savedRoomIds: number[];
 }
 
@@ -22,6 +23,7 @@ const initialState: RoomListingsState = {
   listingsByType: {},
   loading: {},
   error: {},
+  lastFetched: {},
   savedRoomIds: [],
 };
 
@@ -32,14 +34,32 @@ export const fetchRoomsByType = createAsyncThunk(
     roomType, 
     page = 0, 
     size = 25, 
-    sort = 'createdAt,desc' 
+    sort = 'createdAt,desc',
+    forceRefresh = false
   }: { 
     roomType?: "APARTMENT" | "WHOLE_HOUSE" | "BOARDING_HOUSE";
     page?: number;
     size?: number;
     sort?: string;
-  }, { rejectWithValue }) => {
+    forceRefresh?: boolean;
+  }, { rejectWithValue, getState }) => {
     try {
+      // Check if we need to fetch or can use cached data
+      const state = getState() as any;
+      const hasData = roomType && state.roomListings.listingsByType[roomType]?.length > 0;
+      const lastFetched = roomType && state.roomListings.lastFetched?.[roomType];
+      
+      // If we have data and it's not too old, return cached data
+      const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+      const isDataFresh = lastFetched && (Date.now() - lastFetched < CACHE_DURATION);
+      
+      if (hasData && isDataFresh && !forceRefresh) {
+        return { 
+          roomType, 
+          listings: state.roomListings.listingsByType[roomType], 
+          fromCache: true 
+        };
+      }
       const res = await roomApi.getRooms({ page, size, sort, roomType });
       const rooms = res.data.data.content;
       
@@ -121,15 +141,21 @@ const roomListingsSlice = createSlice({
         state.loading[roomType] = true;
         state.error[roomType] = null;
       })
-      .addCase(fetchRoomsByType.fulfilled, (state, action) => {
-        const { roomType = 'all', listings } = action.payload;
-        state.listingsByType[roomType] = listings;
-        state.loading[roomType] = false;
-      })
       .addCase(fetchRoomsByType.rejected, (state, action) => {
         const { roomType = 'all' } = action.meta.arg;
         state.loading[roomType] = false;
         state.error[roomType] = "Failed to load listings";
+      })
+      .addCase(fetchRoomsByType.fulfilled, (state, action) => {
+        const { roomType = 'all', listings, fromCache = false } = action.payload;
+
+        if (!fromCache) {
+          state.listingsByType[roomType] = listings;
+          // Update the lastFetched timestamp
+          if (!state.lastFetched) state.lastFetched = {};
+          state.lastFetched[roomType] = Date.now();
+        }
+        state.loading[roomType] = false;
       })
       
       // Handle fetchSavedRoomIds

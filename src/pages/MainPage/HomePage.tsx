@@ -18,9 +18,12 @@ import { District, Province, Ward } from "../../types/address.type";
 import LoginModal from "../../pages/Login/LoginModal";
 import roomApi from "../../apis/room.api";
 import { toast } from "react-toastify";
+import { useAppDispatch, useAppSelector } from "../../store/hook";
+import { fetchRoomsByType } from "../../store/slices/roomListingsSlice";
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [selectedCategory, setSelectedCategory] = useState("tat-ca");
 
   const [provinces, setProvinces] = useState<Province[]>([]);
@@ -42,6 +45,14 @@ const HomePage = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
 
+  const apartmentListings = useAppSelector(state => 
+    state.roomListings.listingsByType?.APARTMENT || []
+  );
+
+  const apartmentLastFetched = useAppSelector(state => 
+    state.roomListings.lastFetched?.APARTMENT
+  );
+
   // useEffect(() => {
   //   const trainAI = async () => {
   //     try {
@@ -53,6 +64,16 @@ const HomePage = () => {
 
   //   trainAI();
   // })
+
+  useEffect(() => {
+    const hasData = apartmentListings.length > 0;
+    const isDataFresh = apartmentLastFetched && 
+      (Date.now() - apartmentLastFetched < 5 * 60 * 1000); // 5 minutes
+    
+    if (!hasData || !isDataFresh) {
+      dispatch(fetchRoomsByType({ roomType: 'APARTMENT' }));
+    }
+  }, [dispatch, apartmentListings.length, apartmentLastFetched]); 
 
   useEffect(() => {
     // Load provinces

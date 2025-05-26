@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import {
   Container,
   Row,
@@ -38,6 +38,7 @@ import { fallbackGeocode, getDefaultCoordinates, retryApiCall } from "../../util
 import LoginModal from "../../pages/Login/LoginModal";
 
 export default function DetailRoom() {
+  const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const [room, setRoom] = useState<RoomGetByID | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -393,6 +394,14 @@ export default function DetailRoom() {
     }
   };
 
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1); 
+    } else {
+      navigate('/');
+    }
+  };
+
   if (loading) {
     return (
       <div
@@ -429,12 +438,16 @@ export default function DetailRoom() {
           <nav aria-label="breadcrumb" className="mb-3">
             <ol className="breadcrumb">
               <li className="breadcrumb-item">
-                <Link
-                  to="/"
+                <a
+                  href="#"
                   className="text-primary text-decoration-none fw-bold"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleGoBack();
+                  }}
                 >
                   Trang chủ
-                </Link>
+                </a>
               </li>
               <li className="breadcrumb-item">
                 <Link
