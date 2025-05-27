@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Form,
   Button,
@@ -23,6 +23,7 @@ import { selectLastFetched, selectListingsByType } from "../../store/selectors/r
 const HomePage = () => {
   const { isMobile, isTablet } = useResponsive();
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const [selectedCategory, setSelectedCategory] = useState("tat-ca");
 
@@ -45,9 +46,7 @@ const HomePage = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [pendingRoomId, setPendingRoomId] = useState<string | null>(null);
 
-  const locationDropdownRef = useRef<HTMLDivElement>(null);
-  const priceDropdownRef = useRef<HTMLDivElement>(null);
-  const areaDropdownRef = useRef<HTMLDivElement>(null);
+  const [isRedirected, setIsRedirected] = useState(false);
 
   const apartmentListings = useAppSelector(state => 
     selectListingsByType(state, 'APARTMENT')
@@ -70,6 +69,31 @@ const HomePage = () => {
   // })
 
   useEffect(() => {
+    if (location.state && (location.state.skipFetch || location.state.isRedirect)) {
+      // Ghi nhớ trạng thái redirect
+      setIsRedirected(true);
+      console.log("Skipping data fetch due to redirect");
+      return;
+    }
+  }, [location]);
+
+  useEffect(() => {
+    if (isRedirected) {
+      // Đặt timeout để reset biến sau khi đã hiển thị trang
+      const timer = setTimeout(() => {
+        setIsRedirected(false);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isRedirected]);
+
+  useEffect(() => {
+    if (isRedirected) {
+      console.log("Skipping apartment fetch due to redirect state");
+      return;
+    }
+
     const hasData = apartmentListings.length > 0;
     const isDataFresh = apartmentLastFetched && 
       (Date.now() - apartmentLastFetched < 5 * 60 * 1000); // 5 minutes
@@ -80,6 +104,11 @@ const HomePage = () => {
   }, [dispatch, apartmentListings.length, apartmentLastFetched]); 
 
   useEffect(() => {
+    if (isRedirected) {
+      console.log("Skipping provinces fetch due to redirect state");
+      return;
+    }
+
     // Load provinces
     const fetchProvinces = async () => {
       try {
@@ -108,6 +137,11 @@ const HomePage = () => {
 
   // Fetch provinces on component mount
   useEffect(() => {
+    if (isRedirected) {
+      console.log("Skipping provinces fetch due to redirect state");
+      return;
+    }
+
     const fetchProvinces = async () => {
       if (localStorage.getItem("provinces")) {
         const cachedProvinces = localStorage.getItem("provinces");
@@ -139,6 +173,8 @@ const HomePage = () => {
 
   // Fetch districts when province changes
   useEffect(() => {
+    if (isRedirected) return;
+
     const fetchDistricts = async () => {
       if (!selectedProvince) {
         setDistricts([]);
@@ -167,6 +203,8 @@ const HomePage = () => {
 
   // Fetch wards when district changes
   useEffect(() => {
+    if (isRedirected) return;
+
     const fetchWards = async () => {
       if (!selectedDistrict) {
         setWards([]);
@@ -1035,10 +1073,10 @@ const HomePage = () => {
         </Row>
       </Container>
 
-      <HotListings roomType="APARTMENT" title="LỰA CHỌN CHỖ Ở HOT" onSaveRoom={handleSaveRoom}  />
+      <HotListings roomType="APARTMENT" title="LỰA CHỌN CHỖ Ở HOT" onSaveRoom={handleSaveRoom} isRedirected={isRedirected} />
       <RoomList />
-      <HotListings roomType="WHOLE_HOUSE" title="NHÀ NGUYÊN CĂN CHO THUÊ" onSaveRoom={handleSaveRoom}  />
-      <HotListings roomType="BOARDING_HOUSE" title="NHÀ TRỌ, PHÒNG TRỌ" onSaveRoom={handleSaveRoom}  />
+      <HotListings roomType="WHOLE_HOUSE" title="NHÀ NGUYÊN CĂN CHO THUÊ" onSaveRoom={handleSaveRoom} isRedirected={isRedirected} />
+      <HotListings roomType="BOARDING_HOUSE" title="NHÀ TRỌ, PHÒNG TRỌ" onSaveRoom={handleSaveRoom} isRedirected={isRedirected} />
       <ProvinceListings provinces={provinces} />
       <LoginModal 
         show={showLoginModal}

@@ -16,6 +16,7 @@ import DetailRoom from "./pages/Navigation/DetailRoom";
 import HistoryPage from "./pages/PayPage/HistoryPage";
 import ManageReviewsPage from "./pages/Navigation/ManageReviewsPage";
 import ManagerPost from "./pages/AdminPage/ManagerPost";
+import ProtectedRoute from "./components/common/ProtectedRoute";
 
 export default function useRouteElement() {
   const routeElement = useRoutes([
@@ -33,7 +34,11 @@ export default function useRouteElement() {
         },
         {
           path: "/post-room",
-          element: <PostRoomPage />, // thêm đường dẫn mới cho trang Dang tin
+          element: (
+            <ProtectedRoute>
+              <PostRoomPage />
+            </ProtectedRoute>
+          ),
         },
         {
           path: "/post-room/:type",
@@ -41,35 +46,67 @@ export default function useRouteElement() {
         },
         {
           path: "/deposit",
-          element: <DepositPage />, // thêm đường dẫn mới cho trang đăng tin
+         element: (
+            <ProtectedRoute>
+              <DepositPage />
+            </ProtectedRoute>
+          ),
         },
         {
           path: "/personal-info",
-          element: <PersonalInfoPage />, // thêm đường dẫn mới cho trang Thong tin cá nhân
+          element: (
+            <ProtectedRoute>
+              <PersonalInfoPage />
+            </ProtectedRoute>
+          ),
         },
         {
           path: "/account-info",
-          element: <AccountInfoPage />, // thêm đường dẫn mới cho trang Thong tin tài khoản
+          element: (
+            <ProtectedRoute>
+              <AccountInfoPage />
+            </ProtectedRoute>
+          ),
         },
         {
           path: "/profile",
-          element: <GeneralStatsPage />, // thêm đường dẫn mới cho trang danh cho chủ trọ
+          element: (
+            <ProtectedRoute>
+              <GeneralStatsPage />
+            </ProtectedRoute>
+          ),
         },{
           path: "//manage-posts",
-          element: <ManagerPost />, // thêm đường dẫn mới cho trang danh cho chủ trọ
+          element: (
+            <ProtectedRoute>
+              <ManagerPost />
+            </ProtectedRoute>
+          ),
         },
         {
           path: "/favorites",
-          element: <SavedRoom />, // Tro da luu
+         element: (
+            <ProtectedRoute>
+              <SavedRoom />
+            </ProtectedRoute>
+          ),
         },
         {
           path: "/notifications",
-          element: <Notifications />, // Thong bao
+          element: (
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          ),
         },
 
         {
           path: "/reviews",
-          element: <ReviewRoom />, // Đánh giá phòng
+          element: (
+            <ProtectedRoute>
+              <ReviewRoom />
+            </ProtectedRoute>
+          ),
         },
         {
           path: "/phong-tro/:id",
@@ -77,11 +114,19 @@ export default function useRouteElement() {
         },
         {
           path: "/history",
-          element: <HistoryPage />, // Lịch sử giao dịch
+          element: (
+            <ProtectedRoute>
+              <HistoryPage />
+            </ProtectedRoute>
+          ),
         },
         {
           path: "/manage-reviews",
-          element: <ManageReviewsPage />, // Quản lý đánh giá
+          element: (
+            <ProtectedRoute>
+              <ManageReviewsPage />
+            </ProtectedRoute>
+          ),
         },
       ],
     },

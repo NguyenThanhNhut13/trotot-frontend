@@ -30,14 +30,17 @@ export default function SavedRoom() {
 
   // Fetch saved rooms from Redux
   useEffect(() => {
-    dispatch(fetchSavedRooms())
-      .unwrap()
-      .catch((error) => {
-        toast.error(
-          "Đã xảy ra lỗi khi tải danh sách trọ đã lưu: " + (error || "Lỗi không xác định")
-        );
-      });
-  }, [dispatch]);
+    // Kiểm tra nếu danh sách đã được tải rồi thì không cần tải lại
+    if (savedRooms.length === 0 && !loading && !error) {
+      dispatch(fetchSavedRooms())
+        .unwrap()
+        .catch((error) => {
+          toast.error(
+            "Đã xảy ra lỗi khi tải danh sách trọ đã lưu: " + (error || "Lỗi không xác định")
+          );
+        });
+    }
+  }, [dispatch, savedRooms.length, loading, error]);
 
   // Cập nhật hàm handleRemoveSaved
   const handleRemoveSaved = async (event: React.MouseEvent, id: number) => {

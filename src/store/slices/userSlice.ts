@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import userApi from '../../apis/user.api';
+import authApi from '../../apis/auth.api';
 import { User } from '../../types/user.type';
 
 interface UserState {
@@ -37,6 +38,26 @@ export const updateProfile = createAsyncThunk(
       return rejectWithValue({
         status: error.response?.status || 0,
         message: error.response?.data?.message || error.message || 'Không thể cập nhật thông tin người dùng',
+      });
+    }
+  }
+);
+
+// Thêm vào userSlice
+export const upgradeUserRole = createAsyncThunk(
+  'user/upgradeRole',
+  async (_, { rejectWithValue, dispatch }) => {
+    try {
+      const response = await authApi.upgradeRole();
+      
+      // Sau khi nâng cấp thành công, tải lại thông tin người dùng
+      dispatch(getProfile());
+      
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue({
+        status: error.response?.status || 0,
+        message: error.response?.data?.message || error.message || 'Không thể nâng cấp quyền người dùng',
       });
     }
   }

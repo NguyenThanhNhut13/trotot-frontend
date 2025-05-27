@@ -28,6 +28,7 @@ interface HotListingsProps {
   sort?: string;
   roomType?: "APARTMENT" | "WHOLE_HOUSE" | "BOARDING_HOUSE";
   onSaveRoom?: (roomId: number) => void;
+  isRedirected?: boolean; 
 }
 
 const HotListings: React.FC<HotListingsProps> = ({
@@ -36,7 +37,8 @@ const HotListings: React.FC<HotListingsProps> = ({
   size = 25,
   sort = "createdAt,desc",
   roomType,
-  onSaveRoom 
+  onSaveRoom,
+  isRedirected = false
 }) => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -74,6 +76,11 @@ const HotListings: React.FC<HotListingsProps> = ({
 
   // Fetch rooms on component mount or when parameters change
   useEffect(() => {
+    if (isRedirected) {
+      console.log(`Skipping ${title} data fetch due to redirect`);
+      return;
+    }
+
     if (roomType) {
       dispatch(fetchRoomsByType({ roomType, page, size, sort }));
     }

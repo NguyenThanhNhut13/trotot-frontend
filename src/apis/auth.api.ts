@@ -13,6 +13,7 @@ export const URL_UPDATE_CREDENTIALS_VERIFY = 'api/v1/auth/me/credentials/verify'
 export const URL_FORGOT_PASSWORD_REQUEST = "api/v1/auth/forgot-password/request";
 export const URL_FORGOT_PASSWORD_VERIFY_OTP = "api/v1/auth/forgot-password/verify-otp";
 export const URL_FORGOT_PASSWORD_RESET = "api/v1/auth/forgot-password/reset";
+export const URL_UPGRADE_ROLE = 'api/v1/auth/upgrade-role'
 
 const authApi = {
   registerAccount(body: { credential: string; fullName: String; password: string; confirmPassword: string }) {
@@ -47,6 +48,10 @@ const authApi = {
 
   resetPassword(body: { token: string; newPassword: string; confirmPassword: string }) {
     return http.post<SuccessResponse<null>>(URL_FORGOT_PASSWORD_RESET, body);
+  },
+
+  upgradeRole() {
+    return http.post<SuccessResponse<null>>(URL_UPGRADE_ROLE)
   },
 }
 

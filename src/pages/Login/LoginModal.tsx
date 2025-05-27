@@ -15,6 +15,7 @@ import OTPModal from "../Register/OTPModal";
 import { useAppDispatch } from '../../store/hook';
 import { login } from '../../store/slices/authSlice';
 import { getProfile } from '../../store/slices/userSlice';
+import { useLocation, useNavigate } from "react-router-dom";
 
 
 type FormData = Pick<LoginSchema, "credential" | "password">;
@@ -27,6 +28,8 @@ interface LoginModalProps {
 
 const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -76,6 +79,9 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
 
       toast.success("Đăng nhập thành công");
       handleClose();
+
+      const from = location.state?.from || '/';
+      navigate(from, { replace: true });
       
     } catch (error: any) {
       // Handle specific validation errors

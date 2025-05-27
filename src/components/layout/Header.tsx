@@ -15,6 +15,7 @@ import { FaBell, FaHeart, FaBars } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAppSelector, useAppDispatch, useResponsive } from "../../store/hook";
 import { logout } from '../../store/slices/authSlice';
+import { upgradeUserRole } from "../../store/slices/userSlice";
 
 const Header = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -39,8 +40,8 @@ const Header = () => {
   };
 
   // Hàm kiểm tra đăng nhập trước khi cho đăng trọ
-  const handlePostRoomClick = () => {
-    if (!profile) {
+  const handlePostRoomClick = async () => {
+    if (!isAuthenticated || !profile) {
       toast.error("Vui lòng đăng nhập để đăng tin!", {
         position: "top-right",
         autoClose: 3000
@@ -48,7 +49,54 @@ const Header = () => {
       setShowLogin(true)
       return
     }
-    navigate('/post-room')
+
+    try {
+      // Hiển thị thông báo đang xử lý
+      toast.info("Đang chuẩn bị tài khoản để đăng tin...", {
+        position: "top-right",
+        autoClose: 2000
+      });
+      
+      // Dispatch thunk upgradeUserRole
+      const resultAction = await dispatch(upgradeUserRole());
+      
+      // Kiểm tra kết quả dispatch
+      if (upgradeUserRole.fulfilled.match(resultAction)) {
+        // Xử lý khi thành công
+        toast.success("Tài khoản đã được nâng cấp thành chủ trọ!", {
+          position: "top-right",
+          autoClose: 3000
+        });
+        
+        // Chuyển hướng đến trang đăng tin
+        navigate('/post-room');
+      } else if (upgradeUserRole.rejected.match(resultAction)) {
+        // Xử lý lỗi từ payload
+        const errorPayload = resultAction.payload as any;
+        
+        // Kiểm tra lỗi 409 - đã có role phù hợp
+        if (errorPayload?.status === 409) {
+          toast.info("Bạn đã có quyền đăng tin!", {
+            position: "top-right",
+            autoClose: 2000
+          });
+          navigate('/post-room');
+          return;
+        }
+        
+        // Xử lý các lỗi khác
+        toast.error(`Không thể nâng cấp tài khoản: ${errorPayload?.message || "Vui lòng thử lại sau"}`, {
+          position: "top-right",
+          autoClose: 3000
+        });
+      }
+    } catch (error: any) {
+      console.error("Lỗi khi nâng cấp tài khoản:", error);
+      toast.error("Có lỗi xảy ra, vui lòng thử lại sau", {
+        position: "top-right",
+        autoClose: 3000
+      });
+    }
   }
 
   const categories = [
@@ -236,9 +284,13 @@ const Header = () => {
                   width="26"
                 />
               </Link>
-              <Link to="/post-room" className="btn btn-primary rounded-circle p-0 d-flex align-items-center justify-content-center ms-1" style={{ width: '36px', height: '36px' }}>
+              <button
+                onClick={handlePostRoomClick}
+                className="btn btn-primary rounded-circle p-0 d-flex align-items-center justify-content-center ms-1"
+                style={{ width: '36px', height: '36px' }}
+              >
                 <i className="fa fa-paper-plane"></i>
-              </Link>
+              </button>
             </div>
           </Container>
         </Navbar>
