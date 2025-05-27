@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import authApi from '../../apis/auth.api';
-import { setAccessTokenToLS, setRefreshTokenToLS, clearLS } from '../../utils/auth';
+import { setAccessTokenToLS, setRefreshTokenToLS, clearLS, getRefreshTokenFromLS } from '../../utils/auth';
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -23,21 +23,54 @@ export const login = createAsyncThunk(
   async (credentials: { credential: string; password: string }, { rejectWithValue }) => {
     try {
       const response = await authApi.login(credentials);
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error);
+      if (response.data && response.data.data) {
+        const { accessToken, refreshToken } = response.data.data;
+        // Lưu token vào localStorage ngay tại đây
+        setAccessTokenToLS(accessToken);
+        setRefreshTokenToLS(refreshToken);
+        return response.data;
+      }
+      return rejectWithValue("Định dạng phản hồi không hợp lệ");
+    } catch (error: any) {
+      // Log lỗi chi tiết để debug
+      console.error("Login error details:", error);
+      
+      // Trả về đầy đủ chi tiết lỗi cho người dùng
+      if (error.response) {
+        // Lỗi từ server với response
+        return rejectWithValue({
+          status: error.response.status,
+          data: error.response.data,
+          message: error.response.data?.message || "Đăng nhập thất bại"
+        });
+      }
+      
+      // Lỗi network hoặc lỗi khác
+      return rejectWithValue({
+        message: error.message || "Không thể kết nối đến máy chủ"
+      });
     }
   }
 );
 
 export const logout = createAsyncThunk(
   'auth/logout',
-  async ({ refreshToken }: { refreshToken: string }, { rejectWithValue }) => {
+  async (payload: { refreshToken?: string } = {}, { rejectWithValue }) => {
     try {
-      const response = await authApi.logout({ refreshToken });
+      // Sử dụng refreshToken từ tham số hoặc từ localStorage
+      const refreshToken = payload.refreshToken || getRefreshTokenFromLS();
+      
+      // Nếu có refreshToken thì gọi API logout
+      if (refreshToken) {
+        await authApi.logout({ refreshToken });
+      }
+      
+      // Xóa dữ liệu trong localStorage
       clearLS();
-      return response.data;
+      return { success: true };
     } catch (error) {
+      // Xóa localStorage ngay cả khi API thất bại
+      clearLS();
       return rejectWithValue(error);
     }
   }

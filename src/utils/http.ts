@@ -112,9 +112,8 @@ export class Http {
         ) {
           const config = error.response?.config || { headers: {}, url: "" };
           const { url } = config;
-          // Trường hợp Token hết hạn và request đó không phải là của request refresh token
-          // thì chúng ta mới tiến hành gọi refresh token
-          if (isAxiosExpiredTokenError(error) && url !== URL_REFRESH_TOKEN) {
+          // Thêm điều kiện url !== URL_LOGIN để tránh vòng lặp với login request
+          if (isAxiosExpiredTokenError(error) && url !== URL_REFRESH_TOKEN && url !== URL_LOGIN) {
             // Hạn chế gọi 2 lần handleRefreshToken
             this.refreshTokenRequest = this.refreshTokenRequest
               ? this.refreshTokenRequest
@@ -134,6 +133,12 @@ export class Http {
                 },
               });
             });
+          }
+
+          // Nếu là URL_LOGIN và bị 401, không làm gì cả (không refresh token)
+          if (url === URL_LOGIN) {
+            // Chỉ hiển thị lỗi, không làm gì thêm
+            return Promise.reject(error);
           }
 
           // Còn những trường hợp như token không đúng

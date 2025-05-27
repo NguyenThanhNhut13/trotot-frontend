@@ -1,24 +1,24 @@
 import React from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { Province } from "../../types/address.type";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useResponsive } from "../../store/hook";
 
-// Định nghĩa kiểu cho tỉnh phổ biến (không kế thừa từ Province)
+// Định nghĩa kiểu cho tỉnh phổ biến
 interface PopularProvince {
   code: string;
   name: string;
   count: number;
 }
 
-// Định nghĩa kiểu cho props
 interface ProvinceListingsProps {
   provinces: Province[];
 }
 
 const ProvinceListings: React.FC<ProvinceListingsProps> = ({ provinces }) => {
   const { isMobile } = useResponsive();
-
+  const navigate = useNavigate();
+  
   // Danh sách 12 tỉnh thành phổ biến (dữ liệu giả)
   const popularProvinces: PopularProvince[] = [
     { code: "HCM", name: "Hồ Chí Minh", count: 4328 },
@@ -42,6 +42,22 @@ const ProvinceListings: React.FC<ProvinceListingsProps> = ({ provinces }) => {
 
   // Hiển thị 12 tỉnh phổ biến trên mobile, đầy đủ trên desktop
   const displayProvinces = isMobile ? popularProvinces : provinces;
+
+  // Thêm hàm xử lý khi click vào tỉnh
+  const handleProvinceClick = (province: Province | PopularProvince, event: React.MouseEvent) => {
+    event.preventDefault();
+    
+    // Lưu thông tin tìm kiếm vào localStorage
+    const searchParams = {
+      province: province.code,
+      provinceName: province.name
+    };
+    
+    localStorage.setItem("searchParams", JSON.stringify(searchParams));
+    
+    // Chuyển hướng đến trang category với tất cả các loại phòng
+    navigate(`/category/tat-ca`);
+  };
 
   // Create rows of provinces for layout
   const createProvinceRows = () => {
@@ -75,9 +91,10 @@ const ProvinceListings: React.FC<ProvinceListingsProps> = ({ provinces }) => {
                 key={`province-${rowIndex}-${colIndex}`} 
                 className={`${isMobile ? 'mb-2' : 'mb-3'}`}
               >
-                <Link 
-                  to={`/filter?province=${province.code}`}
+                <a 
+                  href={`/category/all`}
                   className="text-decoration-none"
+                  onClick={(e) => handleProvinceClick(province, e)}
                 >
                   {isMobile ? (
                     <div className="border rounded p-2 text-center bg-light h-100">
@@ -96,7 +113,7 @@ const ProvinceListings: React.FC<ProvinceListingsProps> = ({ provinces }) => {
                       </p>
                     </div>
                   )}
-                </Link>
+                </a>
               </Col>
             ))}
           </React.Fragment>

@@ -37,6 +37,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
   const [showRegister, setShowRegister] = useState(false);
   const [showOTP, setShowOTP] = useState(false);
   const [registerCredential, setRegisterCredential] = useState("");
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   const {
     register,
@@ -47,15 +48,10 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
     resolver: yupResolver(loginSchemaPick),
   });
 
-  const loginMutation = useMutation({
-    mutationFn: (body: FormData) => authApi.login(body),
-  });
-
-
-
   // Update the submit handler to use Redux
   const onSubmit = handleSubmit(async (data) => {
     setIsLoading(true);
+    setLoginError(null);
 
     const requestBody = {
       credential: data.credential,
@@ -65,34 +61,73 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
     try {
       // Your existing login logic
       await dispatch(login(requestBody)).unwrap();
-      await dispatch(getProfile()).unwrap();
-      
-      // Check for pending save room action
-      const pendingAction = localStorage.getItem("pendingAction");
-      const pendingRoomId = localStorage.getItem("pendingRoomId");
-      
-      if (pendingAction === "save-room" && pendingRoomId) {
+
+      // Thêm delay nhỏ để đảm bảo token được lưu trước khi gọi API tiếp theo
+      setTimeout(async () => {
         try {
-          // Use the saveRoom action from Redux
-          await dispatch(saveRoom(parseInt(pendingRoomId))).unwrap();
-          toast.success("Đã đăng nhập và lưu phòng thành công");
-        } catch (saveError) {
-          console.error("Error saving room after login:", saveError);
+          await dispatch(getProfile()).unwrap();
+          console.log("Profile loaded successfully");
+        } catch (profileError: any) {
+          // Ghi log chi tiết lỗi để debug
+          console.error("Chi tiết lỗi khi tải profile:", profileError);
+          
+          // Không hiển thị lỗi này cho người dùng vì đăng nhập vẫn thành công
+          // Bạn có thể sử dụng toast.warn nếu muốn thông báo nhẹ nhàng
+          // toast.warn("Đã đăng nhập thành công nhưng không tải được thông tin người dùng");
         }
-        
-        // Clear pending action
-        localStorage.removeItem("pendingAction");
-        localStorage.removeItem("pendingRoomId");
-      }
-      
+      }, 300);
+
+      toast.success("Đăng nhập thành công");
       handleClose();
       
-    } catch (error) {
-      // Your existing error handling
+    } catch (error: any) {
+      // Handle specific validation errors
+      if (isAxiosUnprocessableEntityError<ErrorResponse<FormData>>(error)) {
+        const formError = error.response?.data.data;
+        if (formError) {
+          Object.keys(formError).forEach((key) => {
+            setError(key as keyof FormData, {
+              message: formError[key as keyof FormData],
+              type: 'server'
+            });
+          });
+        }
+      } 
+      setLoginError(getVietnameseErrorMessage(error));
     } finally {
       setIsLoading(false);
     }
   });
+
+  const getVietnameseErrorMessage = (error: any): string => {
+    // Kiểm tra lỗi từ response
+    const errorCode = error.response?.data?.code;
+    const statusCode = error.response?.status;
+
+    // Ánh xạ mã lỗi hoặc status code sang thông báo tiếng Việt
+    if (errorCode === "USER_NOT_FOUND" || (statusCode === 404 && error.response?.data?.message?.includes("User not found"))) {
+      return "Tài khoản không tồn tại. Vui lòng kiểm tra lại thông tin đăng nhập.";
+    }
+    
+    if (errorCode === "INVALID_PASSWORD" || statusCode === 401) {
+      return "Mật khẩu không chính xác. Vui lòng thử lại.";
+    }
+    
+    if (statusCode === 403) {
+      return "Tài khoản của bạn không có quyền truy cập. Vui lòng liên hệ quản trị viên.";
+    }
+
+    if (statusCode === 400) {
+      return "Thông tin đăng nhập không hợp lệ. Vui lòng kiểm tra lại.";
+    }
+
+    if (statusCode === 429) {
+      return "Bạn đã thử đăng nhập quá nhiều lần. Vui lòng thử lại sau ít phút.";
+    }
+
+    // Trả về thông báo mặc định nếu không có ánh xạ cụ thể
+    return "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin hoặc thử lại sau.";
+  };
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
@@ -123,7 +158,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
             <h4 className="fw-bold mb-4">Chào mừng bạn đến với Trọ Mới</h4>
           </div>
 
-          <Form noValidate onSubmit={onSubmit}>
+          <Form noValidate onSubmit={onSubmit}> 
             <Form.Group className="mb-3">
               <Form.Control
                 type="text"
@@ -156,6 +191,13 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
                 {errors.password?.message}
               </Form.Control.Feedback>
             </Form.Group>
+
+            {/* Display error message if present */}
+            {loginError && (
+              <div className="alert alert-danger mb-3">
+                {loginError}
+              </div>
+            )}
 
             <div className="text-end mb-3">
               <button
