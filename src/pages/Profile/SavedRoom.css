@@ -2,15 +2,23 @@
   margin-bottom: 2rem;
 }
 
+/* Sửa lại CSS cho container hình ảnh */
 .room-image-container {
-  max-height: 200px;
+  height: 220px;
+  padding: 0;
   overflow: hidden;
 }
 
+/* Đảm bảo hình ảnh cover hoàn toàn container */
 .room-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: cover; /* Quan trọng: đảm bảo hình ảnh cover hết container */
+  transition: transform 0.3s ease;
+}
+
+.card:hover .room-image {
+  transform: scale(1.05);
 }
 
 .favorite-icon {

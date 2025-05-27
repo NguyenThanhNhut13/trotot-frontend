@@ -2,9 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Badge, Spinner } from "react-bootstrap";
 import Sidebar from "../MainPage/SidebarPersion";
 import { FaMapMarkerAlt, FaHeart } from "react-icons/fa";
+import { AppDispatch, RootState } from "../../store/store";
+import { fetchSavedRooms, removeSavedRoom } from "../../store/slices/savedRoomsSlice";
 import "./SavedRoom.css";
 import { toast } from "react-toastify";
-import roomApi from "../../apis/room.api";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { formatCurrency } from "../../utils/formatters";
 
 interface Room {
   id: number;
@@ -20,49 +24,20 @@ interface Room {
 }
 
 export default function SavedRoom() {
-  const [savedRooms, setSavedRooms] = useState<Room[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate(); 
+  const { items: savedRooms, loading, error } = useSelector((state: RootState) => state.savedRooms);
 
-  // Fetch saved rooms from API
+  // Fetch saved rooms from Redux
   useEffect(() => {
-    const fetchSavedRooms = async () => {
-      try {
-        setLoading(true);
-        const response = await roomApi.getWishList();
-
-        if (response.data && Array.isArray(response.data.data)) {
-          // Map API response to Room interface
-          const rooms = response.data.data.map((item: any) => ({
-            id: item.id,
-            title: item.title || "Không có tiêu đề",
-            address: item.address || "Không có địa chỉ",
-            price: item.price ? `${item.price} triệu/tháng` : "Liên hệ",
-            type: item.type || "Nhà trọ, phòng trọ",
-            area: item.area || 0,
-            imageUrl: item.imageUrls[0] || "/images/default-room.jpg",
-            district: item.district || "",
-            province: item.province || "",
-            isHot: item.isHot || false,
-          }));
-          setSavedRooms(rooms);
-        } else {
-          toast.warning(
-            "Không thể lấy danh sách trọ đã lưu. Hiển thị dữ liệu mặc định."
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching saved rooms:", error);
+    dispatch(fetchSavedRooms())
+      .unwrap()
+      .catch((error) => {
         toast.error(
-          "Đã xảy ra lỗi khi tải danh sách trọ đã lưu. Hiển thị dữ liệu mặc định."
+          "Đã xảy ra lỗi khi tải danh sách trọ đã lưu: " + (error || "Lỗi không xác định")
         );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchSavedRooms();
-  }, []);
+      });
+  }, [dispatch]);
 
   // Cập nhật hàm handleRemoveSaved
   const handleRemoveSaved = async (event: React.MouseEvent, id: number) => {
@@ -70,15 +45,10 @@ export default function SavedRoom() {
     event.stopPropagation();
     
     try {
-      // Gọi API để xóa phòng khỏi danh sách yêu thích
-      await roomApi.removeFromWishList(id);
-      
-      // Cập nhật UI bằng cách xóa khỏi state local
-      setSavedRooms(savedRooms.filter((room) => room.id !== id));
-      
+      // Dispatch action để xóa phòng từ Redux store và API
+      await dispatch(removeSavedRoom(id)).unwrap();
       toast.success("Đã xóa trọ khỏi danh sách yêu thích!");
     } catch (error) {
-      console.error("Error removing room from wishlist:", error);
       toast.error("Có lỗi xảy ra khi xóa trọ khỏi danh sách yêu thích!");
     }
   };
@@ -101,15 +71,17 @@ export default function SavedRoom() {
               <Spinner animation="border" variant="primary" />
               <p className="mt-3">Đang tải danh sách trọ đã lưu...</p>
             </div>
+          ) : error ? (
+            <div className="text-center py-5 text-danger">
+              <p>Đã xảy ra lỗi: {error}</p>
+            </div>
           ) : savedRooms.length > 0 ? (
             <div className="saved-rooms-container">
               {savedRooms.map((room) => (
                 <Card
                   key={room.id}
                   className="mb-4 overflow-hidden border-0 shadow-sm"
-                  onClick= {() => {
-                    window.location.href = `/phong-tro/${room.id}`;
-                  }}
+                  onClick={() => navigate(`/phong-tro/${room.id}`)}
                 >
                   <div className="position-relative">
                     {room.isHot && (
@@ -127,11 +99,10 @@ export default function SavedRoom() {
                       <FaHeart className="text-danger" size={24} />
                     </div>
                     <Row className="g-0">
-                      <Col md={4} className="room-image-container">
-                        <Card.Img
-                          variant="top"
+                      <Col md={4} className="room-image-container p-0">
+                        <img
                           src={room.imageUrl}
-                          className="room-image"
+                          className="room-image w-100 h-100"
                           alt={room.title}
                           onError={(e) => {
                             const target = e.target as HTMLImageElement;
@@ -154,7 +125,7 @@ export default function SavedRoom() {
                             <div className="me-5">
                               Từ{" "}
                               <span className="text-primary fw-bold">
-                                {room.price}
+                                {formatCurrency(room.price)}
                               </span>
                             </div>
                           </div>
@@ -172,7 +143,7 @@ export default function SavedRoom() {
                               text="dark"
                               className="me-2 mb-2 px-3 py-2 rounded-pill"
                             >
-                              {room.area}m²
+                              {room.area} m²
                             </Badge>
                           </div>
 

@@ -6,10 +6,13 @@ import { AppDispatch } from "./store/store";
 import { useEffect } from "react";
 import { checkAndRefreshToken } from "./store/slices/authSlice";
 import { getProfile } from "./store/slices/userSlice";
+import { useTokenRefresh } from "./store/hook";
 
 function App() {
   const routeElement = useRouteElement();
   const dispatch = useDispatch<AppDispatch>();
+
+  useTokenRefresh();
 
   useEffect(() => {
     const loadUserData = async () => {
