@@ -1,4 +1,3 @@
-import type { RegisterOptions, UseFormGetValues } from "react-hook-form";
 import * as yup from "yup";
 
 function testPriceMinMax(this: yup.TestContext<yup.AnyObject>) {

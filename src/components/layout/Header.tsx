@@ -14,7 +14,7 @@ import RegisterModal from "../../pages/Register/RegisterModal";
 import { FaBell, FaHeart, FaBars } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAppSelector, useAppDispatch, useResponsive } from "../../store/hook";
-import { logout } from '../../store/slices/authSlice';
+import { checkAndRefreshToken, logout } from '../../store/slices/authSlice';
 import { upgradeUserRole } from "../../store/slices/userSlice";
 
 const Header = () => {
@@ -59,6 +59,8 @@ const Header = () => {
       
       // Dispatch thunk upgradeUserRole
       const resultAction = await dispatch(upgradeUserRole());
+
+      await dispatch(checkAndRefreshToken()).unwrap();
       
       // Kiểm tra kết quả dispatch
       if (upgradeUserRole.fulfilled.match(resultAction)) {

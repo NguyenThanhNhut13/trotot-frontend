@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import roomApi from '../../apis/room.api';
-import { toast } from 'react-toastify';
 
 interface Room {
   id: number;

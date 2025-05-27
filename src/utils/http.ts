@@ -20,7 +20,7 @@ import {
 } from "../apis/auth.api";
 import { URL_GET_PROFILE } from "../apis/user.api";
 import { isAxiosExpiredTokenError, isAxiosUnauthorizedError } from "./utils";
-import { ErrorResponse, ResponseOfAccessToken401 } from "../types/utils.type";
+import { ErrorResponse } from "../types/utils.type";
 import { UserRespone } from "../types/user.type";
 
 // Post: 1 - 3
