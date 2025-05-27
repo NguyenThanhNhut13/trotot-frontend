@@ -20,16 +20,6 @@ export const getAccessTokenFromLS = () => localStorage.getItem('accessToken') ||
 
 export const getRefreshTokenFromLS = () => localStorage.getItem('refreshToken') || ''
 
-export const getProfileFromLS = () => {
-  try {
-    const result = localStorage.getItem('profile')
-    return result ? JSON.parse(result) : null
-  } catch (error) {
-    console.error('Failed to parse profile from LS:', error)
-    return null
-  }
-}
-
 export const setProfileToLS = (profile: User ) => {
   if (profile) {
     localStorage.setItem('profile', JSON.stringify(profile))

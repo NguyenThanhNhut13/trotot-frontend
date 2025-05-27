@@ -5,7 +5,6 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { FaGoogle, FaFacebook, FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "react-toastify";
 
-import authApi from "../../apis/auth.api";
 import { loginSchema, LoginSchema } from "../../utils/rules";
 import { ErrorResponse } from "../../types/utils.type";
 import { isAxiosUnprocessableEntityError } from "../../utils/utils";
@@ -16,8 +15,6 @@ import OTPModal from "../Register/OTPModal";
 import { useAppDispatch } from '../../store/hook';
 import { login } from '../../store/slices/authSlice';
 import { getProfile } from '../../store/slices/userSlice';
-import { useMutation } from "@tanstack/react-query";
-import { saveRoom } from "../../store/slices/roomListingsSlice";
 
 
 type FormData = Pick<LoginSchema, "credential" | "password">;
@@ -194,7 +191,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
 
             {/* Display error message if present */}
             {loginError && (
-              <div className="alert alert-danger mb-3">
+              <div className="text-danger mb-3">
                 {loginError}
               </div>
             )}

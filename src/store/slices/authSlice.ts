@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import authApi from '../../apis/auth.api';
 import { setAccessTokenToLS, setRefreshTokenToLS, clearLS, getRefreshTokenFromLS } from '../../utils/auth';
+import { getProfile, resetProfile } from './userSlice';
+import { jwtDecode } from 'jwt-decode'; 
 
 interface AuthState {
   isAuthenticated: boolean;
@@ -55,7 +57,7 @@ export const login = createAsyncThunk(
 
 export const logout = createAsyncThunk(
   'auth/logout',
-  async (payload: { refreshToken?: string } = {}, { rejectWithValue }) => {
+  async (payload: { refreshToken?: string } = {}, { dispatch, rejectWithValue }) => {
     try {
       // Sử dụng refreshToken từ tham số hoặc từ localStorage
       const refreshToken = payload.refreshToken || getRefreshTokenFromLS();
@@ -67,11 +69,86 @@ export const logout = createAsyncThunk(
       
       // Xóa dữ liệu trong localStorage
       clearLS();
+
+      dispatch(resetProfile());
+
       return { success: true };
     } catch (error) {
       // Xóa localStorage ngay cả khi API thất bại
       clearLS();
+
+      dispatch(resetProfile());
+      
       return rejectWithValue(error);
+    }
+  }
+);
+
+export const checkAndRefreshToken = createAsyncThunk(
+  'auth/checkAndRefreshToken',
+  async (_, { dispatch, rejectWithValue }) => {
+    try {
+      // Lấy token từ localStorage
+      const accessToken = localStorage.getItem('accessToken');
+      const refreshToken = localStorage.getItem('refreshToken');
+      
+      // Nếu không có token, không làm gì
+      if (!accessToken || !refreshToken) {
+        return rejectWithValue('No tokens available');
+      }
+      
+      // Kiểm tra token có hết hạn chưa
+      const isTokenExpired = (token: string) => {
+        try {
+          const decoded: any = jwtDecode(token);
+          const currentTime = Date.now() / 1000;
+          return decoded.exp < currentTime;
+        } catch {
+          // Nếu không decode được, coi như token không hợp lệ
+          return true;
+        }
+      };
+      
+      // Nếu access token chưa hết hạn, không cần refresh
+      if (!isTokenExpired(accessToken)) {
+        // Token vẫn còn hiệu lực, cập nhật state
+        dispatch(setCredentials({ accessToken, refreshToken }));
+        return { accessToken, refreshToken };
+      }
+      
+      // Nếu access token hết hạn, thử refresh
+      const response = await authApi.refreshToken({ accessToken, refreshToken });
+      if (response.data && response.data.data) {
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = response.data.data;
+        
+        // Lưu token mới vào localStorage và cập nhật state
+        setAccessTokenToLS(newAccessToken);
+        setRefreshTokenToLS(newRefreshToken);
+        
+        // Cập nhật state trong redux
+        dispatch(setCredentials({ 
+          accessToken: newAccessToken, 
+          refreshToken: newRefreshToken 
+        }));
+        
+        // Tải thông tin người dùng sau khi refresh token thành công
+        try {
+          await dispatch(getProfile());
+        } catch (error) {
+          console.error('Error loading profile after token refresh:', error);
+        }
+        
+        return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+      }
+      
+      return rejectWithValue('Failed to refresh token');
+    } catch (error: any) {
+      console.error('Token refresh error:', error);
+      
+      // Nếu refresh thất bại, xóa token và reset state
+      clearLS();
+      dispatch(resetAuth());
+      return rejectWithValue(error.message || 'Token refresh failed');
     }
   }
 );
@@ -114,6 +191,16 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
       .addCase(logout.fulfilled, (state) => {
+        state.isAuthenticated = false;
+        state.accessToken = null;
+        state.refreshToken = null;
+      })
+      .addCase(checkAndRefreshToken.fulfilled, (state, action) => {
+        state.isAuthenticated = true;
+        state.accessToken = action.payload.accessToken;
+        state.refreshToken = action.payload.refreshToken;
+      })
+      .addCase(checkAndRefreshToken.rejected, (state) => {
         state.isAuthenticated = false;
         state.accessToken = null;
         state.refreshToken = null;

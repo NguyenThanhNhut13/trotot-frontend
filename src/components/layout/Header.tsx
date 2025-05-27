@@ -11,12 +11,10 @@ import {
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import LoginModal from "../../pages/Login/LoginModal";
 import RegisterModal from "../../pages/Register/RegisterModal";
-import { FaBell, FaHeart, FaBars, FaUser, FaSignOutAlt } from "react-icons/fa";
+import { FaBell, FaHeart, FaBars } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useAppSelector, useAppDispatch, useResponsive } from "../../store/hook";
-import { logout, resetAuth } from '../../store/slices/authSlice';
-import { useMutation } from "@tanstack/react-query";
-import authApi from "../../apis/auth.api";
+import { logout } from '../../store/slices/authSlice';
 
 const Header = () => {
   const [showLogin, setShowLogin] = useState(false);
@@ -29,14 +27,6 @@ const Header = () => {
   
   const dispatch = useAppDispatch();
   const { profile } = useAppSelector(state => state.user);
-
-  const logoutMutation = useMutation({
-    mutationFn: authApi.logout,
-    onSuccess: () => {
-      dispatch(resetAuth());
-      navigate('/')
-    }
-  })
 
   const handleLogout = () => {
     const refreshToken = localStorage.getItem("refreshToken");
