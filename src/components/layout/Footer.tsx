@@ -626,8 +626,8 @@ const Footer = () => {
         style={{
           width: isMobile ? "50px" : "60px",
           height: isMobile ? "50px" : "60px",
-          bottom: isMobile ? "20px" : "30px",
-          right: isMobile ? "20px" : "30px",
+          bottom: isMobile ? "90px" : "90px",
+          right: isMobile ? "23px" : "23px",
           backgroundColor: primaryColor,
           color: "white",
           zIndex: 1000,
