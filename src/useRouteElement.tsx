@@ -1,7 +1,6 @@
 import React from "react";
 import { useRoutes } from "react-router-dom";
 import HomePage from "./pages/MainPage/HomePage";
-import CategoryPage from "./pages/Navigation/CategoryPage";
 import HomeLayOut from "./pages/MainPage/HomeLayOut";
 import PostRoomPage from "./pages/RoomPostPage/OptionRoom"; // thêm import cho trang đăng tin
 import RoomPostForm from "./pages/RoomPostPage/StepOne"; // thêm import cho trang đăng tin
@@ -17,6 +16,7 @@ import HistoryPage from "./pages/PayPage/HistoryPage";
 import ManageReviewsPage from "./pages/Navigation/ManageReviewsPage";
 import ManagerPost from "./pages/AdminPage/ManagerPost";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import RoomListingsPage from "./pages/Navigation/RoomListingsPage";
 
 export default function useRouteElement() {
   const routeElement = useRoutes([
@@ -29,8 +29,8 @@ export default function useRouteElement() {
           element: <HomePage />,
         },
         {
-          path: "category/:type",
-          element: <CategoryPage />,
+          path: "/category/:categorySlug",
+          element: <RoomListingsPage />
         },
         {
           path: "/post-room",

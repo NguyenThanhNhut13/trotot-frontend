@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Card, Button, Row, Col, Form, Dropdown, Spinner, Offcanvas } from "react-bootstrap"
 import { Link, useNavigate } from "react-router-dom"
@@ -22,9 +20,10 @@ export interface Listing {
   location: string
 }
 
-interface Props {
-  title: string
-  roomType: "APARTMENT" | "WHOLE_HOUSE" | "BOARDING_HOUSE"
+interface SearchRoomPageProps {
+  title?: string;
+  roomType?: "APARTMENT" | "WHOLE_HOUSE" | "BOARDING_HOUSE" | null;
+  allowTypeChange?: boolean; // Cho phép thay đổi loại phòng (true cho AllCategoriesPage)
 }
 
 const priceLabelMap: Record<string, string> = {
@@ -37,26 +36,36 @@ const priceLabelMap: Record<string, string> = {
   "100m-plus": "Trên 100 triệu",
 }
 
-const CategorySharedPage = ({ title, roomType }: Props) => {
+const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, allowTypeChange = false }: SearchRoomPageProps) => {
   const navigate = useNavigate()
   const { isMobile, isTablet } = useResponsive()
+  
+  // Các state cho dữ liệu và phân trang
   const [listings, setListings] = useState<Listing[]>([])
   const [filteredListings, setFilteredListings] = useState<Listing[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [totalCount, setTotalCount] = useState(0)
   const [showFilters, setShowFilters] = useState(false)
 
+  // State cho việc chọn loại phòng trọ
+  const [activeTab, setActiveTab] = useState<"BOARDING_HOUSE" | "WHOLE_HOUSE" | "APARTMENT" | null>(roomType)
+
+  // State cho dữ liệu từ API
   const [amenities, setAmenities] = useState<Amenity[]>([])
   const [targetAudiences, setTargetAudiences] = useState<TargetAudience[]>([])
   const [surroundingAreas, setSurroundingAreas] = useState<SurroundingArea[]>([])
+
+  // State cho trạng thái loading và error
   const [isLoading, setIsLoading] = useState(true)
   const [isSearching, setIsSearching] = useState(false)
   const [searchParams, setSearchParams] = useState<any>(null)
   const [filterError, setFilterError] = useState<string | null>(null)
   const [searchError, setSearchError] = useState<string | null>(null)
 
+  // State cho bộ lọc
   const [selectedFilters, setSelectedFilters] = useState(() => {
-    const savedFilters = localStorage.getItem(`filters_${roomType}`)
+    const savedFiltersKey = roomType ? `filters_${roomType}` : 'filters_all';
+    const savedFilters = localStorage.getItem(savedFiltersKey)
     if (savedFilters) {
       try {
         return JSON.parse(savedFilters)
@@ -72,6 +81,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     }
   })
 
+  // State cho địa điểm
   const [provinces, setProvinces] = useState<Province[]>([])
   const [districts, setDistricts] = useState<District[]>([])
   const [wards, setWards] = useState<Ward[]>([])
@@ -81,6 +91,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
   const [selectedDistrict, setSelectedDistrict] = useState<string>("")
   const [selectedWard, setSelectedWard] = useState<string>("")
 
+  // State cho mức giá
   const [priceRange, setPriceRange] = useState("all")
   const [minPriceInput, setMinPriceInput] = useState("")
   const [maxPriceInput, setMaxPriceInput] = useState("")
@@ -88,11 +99,14 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
   const [loading, setLoading] = useState(false)
   const maxRetries = 3
 
+  // Lưu bộ lọc đã chọn vào localStorage
   useEffect(() => {
-    localStorage.setItem(`filters_${roomType}`, JSON.stringify(selectedFilters))
+    const storageKey = roomType ? `filters_${roomType}` : 'filters_all';
+    localStorage.setItem(storageKey, JSON.stringify(selectedFilters))
     window.scrollTo({ top: 0, behavior: "smooth" })
   }, [selectedFilters, roomType])
 
+  // Các tùy chọn diện tích
   const areaOptions = [
     { id: "under20", label: "Dưới 20 m2" },
     { id: "20-40", label: "20-40 m2" },
@@ -101,6 +115,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     { id: "above80", label: "Trên 80 m2" },
   ]
 
+  // Lấy dữ liệu bộ lọc từ API hoặc cache
   const fetchFilters = async (attempt = 1) => {
     setIsLoading(true)
     setFilterError(null)
@@ -153,10 +168,12 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     }
   }
 
+  // Fetch bộ lọc khi component mount
   useEffect(() => {
     fetchFilters()
   }, [])
 
+  // Lấy danh sách tỉnh/thành phố
   const fetchProvinces = async (attempt = 1) => {
     if (localStorage.getItem("provinces")) {
       const cachedProvinces = localStorage.getItem("provinces")
@@ -181,7 +198,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
       } else if (error.response?.status === 429) {
         setLocationError("Đã vượt quá giới hạn gọi API. Vui lòng thử lại sau.")
         toast.error("Đã vượt quá giới hạn gọi API. Vui lòng chờ và thử lại sau.", {
-          autoClose: 5000, // Tự động đóng sau 5 giây
+          autoClose: 5000,
         })
       } else {
         setLocationError("Không thể tải danh sách tỉnh/thành phố. Vui lòng thử lại sau.")
@@ -191,10 +208,12 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     }
   }
 
+  // Fetch tỉnh/thành phố khi component mount
   useEffect(() => {
     fetchProvinces()
   }, [])
 
+  // Fetch quận/huyện khi chọn tỉnh/thành phố
   const fetchDistricts = async (attempt = 1) => {
     if (!selectedProvince) {
       setDistricts([])
@@ -225,6 +244,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     }
   }
 
+  // Fetch quận/huyện khi thay đổi tỉnh/thành phố
   useEffect(() => {
     fetchDistricts()
     setSelectedDistrict("")
@@ -232,6 +252,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     setWards([])
   }, [selectedProvince])
 
+  // Fetch phường/xã khi chọn quận/huyện
   const fetchWards = async (attempt = 1) => {
     if (!selectedDistrict) {
       setWards([])
@@ -262,13 +283,19 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     }
   }
 
+  // Fetch phường/xã khi thay đổi quận/huyện
   useEffect(() => {
     fetchWards()
     setSelectedWard("")
   }, [selectedDistrict])
 
+  // Lấy dữ liệu cache nếu có
   useEffect(() => {
-    const cachedData = localStorage.getItem(`list${roomType}Pagging`)
+    // Xác định key dựa trên roomType hiện tại hay activeTab
+    const currentType = roomType || activeTab;
+    const cacheKey = currentType ? `list${currentType}Pagging` : 'listAllRooms';
+    
+    const cachedData = localStorage.getItem(cacheKey)
     if (cachedData) {
       try {
         const parsedData = JSON.parse(cachedData)
@@ -279,31 +306,60 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
         console.error("Error parsing cached data:", error)
       }
     }
-  }, [roomType])
+  }, [roomType, activeTab])
 
+  // Nếu có search params trong localStorage thì thực hiện tìm kiếm
   useEffect(() => {
     const params = localStorage.getItem("searchParams")
     if (params) {
       try {
         const parsedParams = JSON.parse(params)
         setSearchParams(parsedParams)
-        if (!parsedParams.roomType || parsedParams.roomType === roomType) {
+        // Chỉ tìm kiếm khi không có roomType cố định hoặc roomType khớp với parsedParams.roomType
+        if (!roomType || !parsedParams.roomType || parsedParams.roomType === roomType) {
           performSearch(parsedParams)
         }
       } catch (error) {
         console.error("Error parsing search params:", error)
       }
+    } else if (roomType) {
+      // Nếu không có search params nhưng có roomType, tìm kiếm theo roomType
+      performSearch({ roomType })
+    } else if (activeTab) {
+      // Nếu không có search params nhưng có activeTab, tìm kiếm theo activeTab
+      performSearch({ roomType: activeTab })
+    } else {
+      // Nếu không có gì cả, tìm kiếm tất cả
+      performSearch({})
     }
-  }, [roomType])
+  }, [roomType, activeTab])
 
+  // Xử lý khi chọn tab khác (chỉ dùng khi allowTypeChange=true)
+  const handleTabChange = (newRoomType: "BOARDING_HOUSE" | "WHOLE_HOUSE" | "APARTMENT" | null) => {
+    setActiveTab(newRoomType);
+
+    if (searchParams) {
+      // Thêm roomType vào searchParams và tìm kiếm lại
+      const newParams = { ...searchParams, roomType: newRoomType };
+      performSearch(newParams);
+    } else {
+      // Nếu không có searchParams, tìm kiếm theo roomType
+      performSearch({ roomType: newRoomType });
+    }
+  };
+
+  // Reset location selections
   const resetLocationSelections = () => {
     setSelectedProvince("")
     setSelectedDistrict("")
     setSelectedWard("")
   }
 
+  // Xử lý basic search
   const handleSearch = () => {
-    const searchParams: any = { roomType }
+    const currentRoomType = roomType || activeTab;
+    const searchParams: any = currentRoomType ? { roomType: currentRoomType } : {};
+    
     if (selectedProvince) {
       const provinceName = provinces.find((p) => p.code === selectedProvince)?.name
       searchParams.province = provinceName
@@ -359,6 +415,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     }
   }
 
+  // Reset tất cả bộ lọc
   const resetList = () => {
     setSearchTerm("")
     setPriceRange("all")
@@ -373,7 +430,12 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     })
     setSearchParams(null)
     localStorage.removeItem("searchParams")
-    const cachedData = localStorage.getItem(`list${roomType}Pagging`)
+    
+    // Xác định loại phòng hiện tại để lấy cached data
+    const currentType = roomType || activeTab;
+    const cacheKey = currentType ? `list${currentType}Pagging` : 'listAllRooms';
+    
+    const cachedData = localStorage.getItem(cacheKey)
     if (cachedData) {
       try {
         const parsedData = JSON.parse(cachedData)
@@ -382,10 +444,10 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
         setTotalCount(parsedData.length)
       } catch (error) {
         console.error("Error parsing cached data:", error)
-        performSearch({ roomType })
+        performSearch(currentType ? { roomType: currentType } : {})
       }
     } else {
-      performSearch({ roomType })
+      performSearch(currentType ? { roomType: currentType } : {})
     }
 
     // Close filter sidebar on mobile after reset
@@ -394,8 +456,11 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     }
   }
 
+  // Xử lý advanced search (có thêm các bộ lọc phức tạp)
   const handleSearchAdvanced = () => {
-    const searchParams: any = { roomType }
+    const currentRoomType = roomType || activeTab;
+    const searchParams: any = currentRoomType ? { roomType: currentRoomType } : {};
+    
     if (selectedProvince) {
       const provinceName = provinces.find((p) => p.code === selectedProvince)?.name
       searchParams.province = provinceName
@@ -507,6 +572,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     }
   }
 
+  // Xử lý API search
   const performSearch = async (params: any, attempt = 1) => {
     setIsSearching(true)
     setSearchError(null)
@@ -514,8 +580,17 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
       const searchRoomParams: RoomSearchParams = {
         page: 0,
         size: 25,
-        roomType: roomType,
       }
+      
+      // Thêm roomType nếu có
+      if (params.roomType) {
+        searchRoomParams.roomType = params.roomType
+      } else if (roomType) {
+        // Sử dụng roomType từ props nếu không có trong params
+        searchRoomParams.roomType = roomType
+      }
+
+      // Thêm các params khác
       if (params.query) searchRoomParams.street = params.query
       if (params.province) searchRoomParams.city = params.province
       if (params.district) searchRoomParams.district = params.district
@@ -523,6 +598,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
       if (params.maxPrice !== undefined) searchRoomParams.maxPrice = params.maxPrice
       if (params.areaRange) searchRoomParams.areaRange = params.areaRange
 
+      // Gọi API search
       const response = await roomApi.searchRooms(searchRoomParams)
       if (response.data && response.data.data && response.data.data.content) {
         const transformedListings = response.data.data.content.map((item: Room) => ({
@@ -536,14 +612,20 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
         setListings(transformedListings)
         setFilteredListings(transformedListings)
         setTotalCount(response.data.data.totalElements)
+        
+        // Lưu searchParams vào localStorage
+        if (Object.keys(params).length > 0) {
+          localStorage.setItem("searchParams", JSON.stringify(params))
+          setSearchParams(params)
+        }
       }
     } catch (error: any) {
       console.error(`Attempt ${attempt}: Error searching rooms:`, error)
       if (error.response?.status === 429) {
-        const retryAfter = error.response.headers["retry-after"] || 5 // Lấy thời gian chờ từ header, mặc định 5 giây
+        const retryAfter = error.response.headers["retry-after"] || 5
         setSearchError("Đã vượt quá giới hạn gọi API. Vui lòng thử lại sau.")
         toast.error(`Đã vượt quá giới hạn gọi API. Vui lòng chờ ${retryAfter} giây và thử lại.`, {
-          autoClose: retryAfter * 1000, // Tự động đóng sau thời gian retry
+          autoClose: retryAfter * 1000,
         })
       } else if (attempt <= maxRetries) {
         setTimeout(() => performSearch(params, attempt + 1), 3000 * attempt)
@@ -555,11 +637,13 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     }
   }
 
+  // Xử lý tìm kiếm theo từ khóa
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value)
     filterListings(e.target.value, selectedFilters)
   }
 
+  // Xử lý các toggle filter
   const toggleAreaFilter = (areaId: string) => {
     setSelectedFilters((prev: { area: string[] }) => {
       const newAreas = prev.area.includes(areaId) ? prev.area.filter((id) => id !== areaId) : [...prev.area, areaId]
@@ -602,6 +686,7 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     })
   }
 
+  // Lọc listings theo từ khóa và bộ lọc
   const filterListings = (search: string, filters: typeof selectedFilters) => {
     let result = [...listings]
     if (search) {
@@ -656,6 +741,45 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
           </div>
         ) : (
           <>
+            {/* Loại phòng (chỉ hiển thị khi allowTypeChange=true) */}
+            {allowTypeChange && (
+              <div className="mb-4">
+                <h6 className="fw-bold mb-2">Loại phòng</h6>
+                <Form.Check
+                  type="radio"
+                  id="room-type-all"
+                  label="Tất cả loại phòng"
+                  checked={activeTab === null}
+                  onChange={() => handleTabChange(null)}
+                  className="mb-2"
+                />
+                <Form.Check
+                  type="radio"
+                  id="room-type-boarding"
+                  label="Nhà trọ, phòng trọ"
+                  checked={activeTab === "BOARDING_HOUSE"}
+                  onChange={() => handleTabChange("BOARDING_HOUSE")}
+                  className="mb-2"
+                />
+                <Form.Check
+                  type="radio"
+                  id="room-type-house"
+                  label="Nhà nguyên căn"
+                  checked={activeTab === "WHOLE_HOUSE"}
+                  onChange={() => handleTabChange("WHOLE_HOUSE")}
+                  className="mb-2"
+                />
+                <Form.Check
+                  type="radio"
+                  id="room-type-apartment"
+                  label="Căn hộ, chung cư"
+                  checked={activeTab === "APARTMENT"}
+                  onChange={() => handleTabChange("APARTMENT")}
+                  className="mb-2"
+                />
+              </div>
+            )}
+
             <div className="mb-4">
               <h6 className="fw-bold mb-2">Diện tích</h6>
               {areaOptions.map((area) => (
@@ -738,11 +862,14 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
     )
   }
 
+  // Xác định tiêu đề hiển thị
+  const displayTitle = title.toUpperCase() + (roomType ? " GIÁ RẺ, MỚI NHẤT" : "");
+
   return (
     <div>
       <div className="text-white py-4" style={{ backgroundColor: "#0145aa" }}>
         <div className="container">
-          <h1 className="fw-bold mb-4">{title.toUpperCase()} GIÁ RẺ, MỚI NHẤT</h1>
+          <h1 className="fw-bold mb-4">{displayTitle}</h1>
           <div className="d-flex flex-wrap align-items-center bg-white p-2" style={{ borderRadius: "8px" }}>
             <div className="d-flex align-items-center flex-grow-1 pe-2">
               <div
@@ -761,8 +888,8 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
               />
             </div>
 
-            {/* Category dropdown - hide on mobile */}
-            {!isMobile && (
+            {/* Category dropdown - chỉ hiển thị khi allowTypeChange=true và không phải mobile */}
+            {allowTypeChange && !isMobile && (
               <div className="border-start px-3 d-flex align-items-center" style={{ height: "45px" }}>
                 <div className="dropdown">
                   <button
@@ -773,22 +900,63 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
                     aria-expanded="false"
                     style={{ minWidth: "180px" }}
                   >
-                    <span>Nhà trọ, phòng trọ</span>
+                    <span>
+                      {activeTab === "BOARDING_HOUSE" 
+                        ? "Nhà trọ, phòng trọ"
+                        : activeTab === "WHOLE_HOUSE"
+                        ? "Nhà nguyên căn" 
+                        : activeTab === "APARTMENT"
+                        ? "Căn hộ, chung cư"
+                        : "Tất cả loại phòng"}
+                    </span>
                   </button>
                   <ul className="dropdown-menu" aria-labelledby="categoryDropdown">
                     <li>
-                      <a className="dropdown-item" href="#">
+                      <a 
+                        className="dropdown-item" 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleTabChange(null);
+                        }}
+                      >
+                        Tất cả loại phòng
+                      </a>
+                    </li>
+                    <li>
+                      <a 
+                        className="dropdown-item" 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleTabChange("BOARDING_HOUSE");
+                        }}
+                      >
                         Nhà trọ, phòng trọ
                       </a>
                     </li>
                     <li>
-                      <a className="dropdown-item" href="#">
+                      <a 
+                        className="dropdown-item" 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleTabChange("WHOLE_HOUSE");
+                        }}
+                      >
                         Nhà nguyên căn
                       </a>
                     </li>
                     <li>
-                      <a className="dropdown-item" href="#">
-                        Căn hộ
+                      <a 
+                        className="dropdown-item" 
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleTabChange("APARTMENT");
+                        }}
+                      >
+                        Căn hộ, chung cư
                       </a>
                     </li>
                   </ul>
@@ -1139,7 +1307,10 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
                   variant="primary"
                   size="sm"
                   className="ms-2"
-                  onClick={() => performSearch(searchParams || { roomType })}
+                  onClick={() => {
+                    const currentType = roomType || activeTab;
+                    performSearch(searchParams || (currentType ? { roomType: currentType } : {}))
+                  }}
                 >
                   Thử lại
                 </Button>
@@ -1246,4 +1417,4 @@ const CategorySharedPage = ({ title, roomType }: Props) => {
   )
 }
 
-export default CategorySharedPage
+export default RoomSearchPage;
