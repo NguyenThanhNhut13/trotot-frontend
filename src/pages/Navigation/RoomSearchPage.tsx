@@ -20,6 +20,13 @@ export interface Listing {
   location: string
 }
 
+interface SelectedFilters {
+  area: string;
+  amenities: string[];
+  targetAudiences: string[];
+  surroundingAreas: string[];
+}
+
 interface SearchRoomPageProps {
   title?: string;
   roomType?: "APARTMENT" | "WHOLE_HOUSE" | "BOARDING_HOUSE" | null;
@@ -63,18 +70,18 @@ const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, al
   const [searchError, setSearchError] = useState<string | null>(null)
 
   // State cho bộ lọc
-  const [selectedFilters, setSelectedFilters] = useState(() => {
+  const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>(() => {
     const savedFiltersKey = roomType ? `filters_${roomType}` : 'filters_all';
     const savedFilters = localStorage.getItem(savedFiltersKey)
     if (savedFilters) {
       try {
-        return JSON.parse(savedFilters)
+        return JSON.parse(savedFilters) as SelectedFilters
       } catch (error) {
         console.error("Error parsing saved filters:", error)
       }
     }
     return {
-      area: [] as string[],
+      area: "",
       amenities: [] as string[],
       targetAudiences: [] as string[],
       surroundingAreas: [] as string[],
@@ -423,7 +430,7 @@ const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, al
     setMaxPriceInput("")
     resetLocationSelections()
     setSelectedFilters({
-      area: [],
+      area: "",
       amenities: [],
       targetAudiences: [],
       surroundingAreas: [],
@@ -458,113 +465,7 @@ const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, al
 
   // Xử lý advanced search (có thêm các bộ lọc phức tạp)
   const handleSearchAdvanced = () => {
-    const currentRoomType = roomType || activeTab;
-    const searchParams: any = currentRoomType ? { roomType: currentRoomType } : {};
-    
-    if (selectedProvince) {
-      const provinceName = provinces.find((p) => p.code === selectedProvince)?.name
-      searchParams.province = provinceName
-    }
-    if (selectedDistrict) {
-      const districtName = districts.find((d) => d.code === selectedDistrict)?.name
-      searchParams.district = districtName
-    }
-    if (selectedWard) {
-      const wardName = wards.find((w) => w.code === selectedWard)?.name
-      searchParams.ward = wardName
-    }
-    if (priceRange && priceRange !== "all") {
-      switch (priceRange) {
-        case "under-1m":
-          searchParams.maxPrice = 1000000
-          break
-        case "1-10m":
-          searchParams.minPrice = 1000000
-          searchParams.maxPrice = 10000000
-          break
-        case "10-30m":
-          searchParams.minPrice = 10000000
-          searchParams.maxPrice = 30000000
-          break
-        case "30-50m":
-          searchParams.minPrice = 30000000
-          searchParams.maxPrice = 50000000
-          break
-        case "50m-plus":
-          searchParams.minPrice = 50000000
-          break
-        case "100m-plus":
-          searchParams.minPrice = 100000000
-          break
-      }
-    } else if (minPriceInput || maxPriceInput) {
-      if (minPriceInput) {
-        searchParams.minPrice = Number.parseFloat(minPriceInput) * 1000000
-      }
-      if (maxPriceInput) {
-        searchParams.maxPrice = Number.parseFloat(maxPriceInput) * 1000000
-      }
-    }
-    if (searchTerm) {
-      searchParams.query = searchTerm
-    }
-    if (selectedFilters.area.length > 0) {
-      const areaRanges = []
-      for (const area of selectedFilters.area) {
-        switch (area) {
-          case "under20":
-            areaRanges.push("0-20")
-            break
-          case "20-40":
-            areaRanges.push("20-40")
-            break
-          case "40-60":
-            areaRanges.push("40-60")
-            break
-          case "60-80":
-            areaRanges.push("60-80")
-            break
-          case "above80":
-            areaRanges.push("80-999")
-            break
-        }
-      }
-      searchParams.areaRange = areaRanges.join(",")
-    }
-    if (selectedFilters.amenities.length > 0) {
-      const amenityNames = selectedFilters.amenities
-        .map((id: string) => {
-          const amenity = amenities.find((a) => a.id.toString() === id)
-          return amenity ? amenity.name : ""
-        })
-        .filter(Boolean)
-      if (amenityNames.length > 0) {
-        searchParams.amenities = amenityNames.join(",")
-      }
-    }
-    if (selectedFilters.surroundingAreas.length > 0) {
-      const areaNames = selectedFilters.surroundingAreas
-        .map((id: string) => {
-          const area = surroundingAreas.find((a) => a.id.toString() === id)
-          return area ? area.name : ""
-        })
-        .filter(Boolean)
-      if (areaNames.length > 0) {
-        searchParams.environment = areaNames.join(",")
-      }
-    }
-    if (selectedFilters.targetAudiences.length > 0) {
-      const audienceNames = selectedFilters.targetAudiences
-        .map((id: string) => {
-          const audience = targetAudiences.find((a) => a.id.toString() === id)
-          return audience ? audience.name : ""
-        })
-        .filter(Boolean)
-      if (audienceNames.length > 0) {
-        searchParams.targetAudience = audienceNames.join(",")
-      }
-    }
-    performSearch(searchParams)
+    filterListings(searchTerm, selectedFilters);
 
     // Close filter sidebar on mobile after search
     if (isMobile) {
@@ -596,7 +497,24 @@ const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, al
       if (params.district) searchRoomParams.district = params.district
       if (params.minPrice !== undefined) searchRoomParams.minPrice = params.minPrice
       if (params.maxPrice !== undefined) searchRoomParams.maxPrice = params.maxPrice
-      if (params.areaRange) searchRoomParams.areaRange = params.areaRange
+      if (params.areaRange || (selectedFilters.area && params.roomType)) {
+        // Nếu có areaRange trong params, sử dụng nó
+        // Hoặc nếu đang tìm kiếm theo roomType và có diện tích được chọn
+        const areaRange = params.areaRange || (() => {
+          switch(selectedFilters.area) {
+            case "under20": return "0-20";
+            case "20-40": return "20-40";
+            case "40-60": return "40-60";
+            case "60-80": return "60-80";
+            case "above80": return "80-999";
+            default: return "";
+          }
+        })();
+        
+        if (areaRange) {
+          searchRoomParams.areaRange = areaRange;
+        }
+      }
 
       // Gọi API search
       const response = await roomApi.searchRooms(searchRoomParams)
@@ -644,17 +562,18 @@ const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, al
   }
 
   // Xử lý các toggle filter
-  const toggleAreaFilter = (areaId: string) => {
-    setSelectedFilters((prev: { area: string[] }) => {
-      const newAreas = prev.area.includes(areaId) ? prev.area.filter((id) => id !== areaId) : [...prev.area, areaId]
-      const newFilters = { ...prev, area: newAreas }
+  const setAreaFilter = (areaId: string) => {
+    setSelectedFilters((prev: SelectedFilters) => {
+      // Nếu đã chọn thì bỏ chọn, nếu chưa thì chọn
+      const newArea = prev.area === areaId ? "" : areaId;
+      const newFilters = { ...prev, area: newArea }
       filterListings(searchTerm, newFilters)
       return newFilters
     })
   }
 
   const toggleAmenityFilter = (amenityId: string) => {
-    setSelectedFilters((prev: { amenities: string[] }) => {
+    setSelectedFilters((prev: SelectedFilters) => {
       const newAmenities = prev.amenities.includes(amenityId)
         ? prev.amenities.filter((id) => id !== amenityId)
         : [...prev.amenities, amenityId]
@@ -665,7 +584,7 @@ const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, al
   }
 
   const toggleTargetAudienceFilter = (audienceId: string) => {
-    setSelectedFilters((prev: { targetAudiences: string[] }) => {
+    setSelectedFilters((prev: SelectedFilters) => {
       const newTargetAudiences = prev.targetAudiences.includes(audienceId)
         ? prev.targetAudiences.filter((id) => id !== audienceId)
         : [...prev.targetAudiences, audienceId]
@@ -676,7 +595,7 @@ const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, al
   }
 
   const toggleSurroundingAreaFilter = (areaId: string) => {
-    setSelectedFilters((prev: { surroundingAreas: string[] }) => {
+    setSelectedFilters((prev: SelectedFilters) => {
       const newSurroundingAreas = prev.surroundingAreas.includes(areaId)
         ? prev.surroundingAreas.filter((id) => id !== areaId)
         : [...prev.surroundingAreas, areaId]
@@ -687,7 +606,7 @@ const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, al
   }
 
   // Lọc listings theo từ khóa và bộ lọc
-  const filterListings = (search: string, filters: typeof selectedFilters) => {
+  const filterListings = (search: string, filters: SelectedFilters) => {
     let result = [...listings]
     if (search) {
       result = result.filter(
@@ -698,12 +617,20 @@ const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, al
     }
     if (filters.area.length > 0) {
       result = result.filter((listing) => {
-        if (filters.area.includes("under20") && listing.area < 20) return true
-        if (filters.area.includes("20-40") && listing.area >= 20 && listing.area < 40) return true
-        if (filters.area.includes("40-60") && listing.area >= 40 && listing.area < 60) return true
-        if (filters.area.includes("60-80") && listing.area >= 60 && listing.area < 80) return true
-        if (filters.area.includes("above80") && listing.area >= 80) return true
-        return filters.area.length === 0
+        switch (filters.area) {
+          case "under20":
+            return listing.area < 20;
+          case "20-40":
+            return listing.area >= 20 && listing.area < 40;
+          case "40-60":
+            return listing.area >= 40 && listing.area < 60;
+          case "60-80":
+            return listing.area >= 60 && listing.area < 80;
+          case "above80":
+            return listing.area >= 80;
+          default:
+            return true;
+        }
       })
     }
     setFilteredListings(result)
@@ -785,14 +712,25 @@ const RoomSearchPage = ({ title = "TẤT CẢ PHÒNG TRỌ", roomType = null, al
               {areaOptions.map((area) => (
                 <Form.Check
                   key={area.id}
-                  type="checkbox"
+                  type="radio"
                   id={`area-${area.id}`}
+                  name="area-filter"
                   label={area.label}
                   className="mb-2"
-                  checked={selectedFilters.area.includes(area.id)}
-                  onChange={() => toggleAreaFilter(area.id)}
+                  checked={selectedFilters.area === area.id}
+                  onChange={() => setAreaFilter(area.id)}
                 />
               ))}
+              {/* Thêm radio "Tất cả diện tích" */}
+                <Form.Check
+                    type="radio"
+                    id="area-all"
+                    name="area-filter"
+                    label="Tất cả diện tích"
+                    className="mb-2"
+                    checked={selectedFilters.area === ""} // Chọn khi không có diện tích nào được chọn
+                    onChange={() => setAreaFilter("")}
+                />
             </div>
             <div className="mb-4">
               <h6 className="fw-bold mb-2">Tiện nghi</h6>
