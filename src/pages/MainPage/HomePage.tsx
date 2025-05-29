@@ -727,6 +727,30 @@ const HomePage = () => {
                                 </div>
                               </div>
                             </div>
+                            <div className="d-flex justify-content-end">
+                              <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => {
+                                  setPriceRange("all");
+                                  setMinPriceInput("");
+                                  setMaxPriceInput("");
+                                }}
+                              >
+                                Đặt lại
+                              </Button>
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => {
+                                  // Đóng dropdown sau khi chọn xong
+                                  document.body.click();
+                                }}
+                              >
+                                Xác nhận
+                              </Button>
+                            </div>
                           </div>
                         </Dropdown.Menu>
                       </Dropdown>
@@ -761,6 +785,26 @@ const HomePage = () => {
                                 className="mb-2"
                               />
                             ))}
+                            <div className="d-flex justify-content-end mt-3">
+                              <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                className="me-2"
+                                onClick={resetAreaFilters}
+                              >
+                                Đặt lại
+                              </Button>
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => {
+                                  // Đóng dropdown sau khi chọn xong
+                                  document.body.click();
+                                }}
+                              >
+                                Xác nhận
+                              </Button>
+                            </div>
                           </div>
                         </Dropdown.Menu>
                       </Dropdown>
@@ -982,6 +1026,30 @@ const HomePage = () => {
                                 </div>
                               </div>
                             </div>
+                            <div className="d-flex justify-content-end">
+                              <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                className="me-2"
+                                onClick={() => {
+                                  setPriceRange("all");
+                                  setMinPriceInput("");
+                                  setMaxPriceInput("");
+                                }}
+                              >
+                                Đặt lại
+                              </Button>
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => {
+                                  // Đóng dropdown sau khi chọn xong
+                                  document.body.click();
+                                }}
+                              >
+                                Xác nhận
+                              </Button>
+                            </div>
                           </div>
                         </Dropdown.Menu>
                       </Dropdown>
@@ -1016,6 +1084,26 @@ const HomePage = () => {
                                 className="mb-2"
                               />
                             ))}
+                            <div className="d-flex justify-content-end mt-3">
+                              <Button
+                                variant="outline-secondary"
+                                size="sm"
+                                className="me-2"
+                                onClick={resetAreaFilters}
+                              >
+                                Đặt lại
+                              </Button>
+                              <Button
+                                variant="primary"
+                                size="sm"
+                                onClick={() => {
+                                  // Đóng dropdown sau khi chọn xong
+                                  document.body.click();
+                                }}
+                              >
+                                Xác nhận
+                              </Button>
+                            </div>
                           </div>
                         </Dropdown.Menu>
                       </Dropdown>
