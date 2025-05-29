@@ -22,9 +22,11 @@ const externalHttp = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 40000
 });
 export const AI_TRAIN_MODE = "api/v1/recommend/train"
 export const AI_SIMILAR_ROOM = "api/v1/recommend/similar"
+export const URL_GET_RECOMMENDED_ROOMS = "api/v1/recommend/user";
 
 const roomApi = {
   getRooms(
@@ -133,6 +135,11 @@ const roomApi = {
   aiTrainMode() {
     return externalHttp.get<SuccessResponse<any>>(`${AI_TRAIN_MODE}`);
   },
+
+  getUserRecommendations(userId: number) {
+    return externalHttp.get<SuccessResponse<any>>(`${URL_GET_RECOMMENDED_ROOMS}/${userId}`);
+  },
+
   getRoomOFUser(id: number) {
     return http.get<GetRoomsResponse>(`${URL_GET_ROOMS}/${id}`);
   },

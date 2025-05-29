@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { Container, Row, Col, Card, Button, Spinner, Alert } from "react-bootstrap"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { FaHeart, FaMapMarkerAlt, FaEye, FaClock } from "react-icons/fa"
-import { useAppSelector, useResponsive } from "../../store/hook"
+import { useAppDispatch, useAppSelector, useResponsive } from "../../store/hook"
 import roomApi from "../../apis/room.api"
 import type { Room } from "../../types/room.type"
+import { fetchRecommendedRooms, resetRecommendations } from "../../store/slices/recommendationSlice"
 
 interface SuggestedRoomsProps {
   onSaveRoom?: (roomId: number) => void
@@ -25,61 +26,24 @@ interface SuggestedRoom {
 }
 
 const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { isMobile, isTablet } = useResponsive()
   const { isAuthenticated } = useAppSelector((state) => state.auth)
-  const [suggestedRooms, setSuggestedRooms] = useState<SuggestedRoom[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [hasLoaded, setHasLoaded] = useState(false)
+  const { profile } = useAppSelector((state) => state.user);
+  const { rooms: suggestedRooms, loading: isLoading, error, hasLoaded } = 
+    useAppSelector((state) => state.recommendation);
 
   // Chỉ fetch khi user đã đăng nhập
   useEffect(() => {
-    if (!isAuthenticated || hasLoaded) return
+    if (!isAuthenticated || !profile || hasLoaded) return;
 
-    const fetchSuggestedRooms = async () => {
-      setIsLoading(true)
-      setError(null)
-
-      try {
-        // Giả sử API gợi ý phòng là roomApi.getSuggestedRooms()
-        // Nếu chưa có API này, có thể dùng API search với params đặc biệt
-        const response = await roomApi.searchRooms({
-          page: 0,
-          size: 8, // Lấy 8 phòng gợi ý
-          // Có thể thêm các params để lấy phòng phù hợp với user
-        })
-
-        if (response.data && response.data.data && response.data.data.content) {
-          const transformedRooms = response.data.data.content.map((room: Room) => ({
-            id: room.id,
-            title: room.title,
-            price: room.price,
-            area: room.area,
-            imageUrls: room.imageUrls,
-            district: room.district,
-            province: room.province,
-            createdAt: room.createdAt,
-            viewCount: Math.floor(Math.random() * 100) + 10, // Random view count for demo
-          }))
-
-          setSuggestedRooms(transformedRooms)
-          setHasLoaded(true)
-        }
-      } catch (err: any) {
-        console.error("Error fetching suggested rooms:", err)
-        setError("Không thể tải gợi ý phòng trọ. Vui lòng thử lại sau.")
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    // Delay để không block các component khác
     const timer = setTimeout(() => {
-      fetchSuggestedRooms()
-    }, 1000)
+      dispatch(fetchRecommendedRooms(profile.id));
+    }, 1000);
 
-    return () => clearTimeout(timer)
-  }, [isAuthenticated, hasLoaded])
+    return () => clearTimeout(timer);
+  }, [dispatch, isAuthenticated, profile, hasLoaded]);
 
   // Không hiển thị gì nếu user chưa đăng nhập
   if (!isAuthenticated) {
@@ -135,10 +99,7 @@ const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
             variant="outline-primary"
             size="sm"
             className="ms-3"
-            onClick={() => {
-              setError(null)
-              setHasLoaded(false)
-            }}
+            onClick={() => dispatch(resetRecommendations())}
           >
             Thử lại
           </Button>
@@ -173,7 +134,7 @@ const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
                         style={{ backgroundColor: "rgba(0, 0, 0, 0.6)", fontSize: "0.75rem" }}
                       >
                         <FaEye className="me-1" size={12} />
-                        {room.viewCount}
+                        {Math.floor(Math.random() * 100) + 10}
                       </div>
 
                       {/* Heart icon */}
@@ -250,15 +211,15 @@ const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
                       </span>
                     </div>
 
-                    {/* Time posted */}
+                    {/* Time posted
                     <div className="d-flex align-items-center mb-3">
                       <FaClock className="text-muted me-1" size={12} />
                       <span className="text-muted" style={{ fontSize: "0.75rem" }}>
                         {formatTimeAgo(room.createdAt)}
                       </span>
-                    </div>
+                    </div> */}
 
-                    {/* View button */}
+                    {/* View button
                     <Link to={`/phong-tro/${room.id}`} className="text-decoration-none">
                       <Button
                         variant="primary"
@@ -268,7 +229,7 @@ const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
                       >
                         Xem chi tiết
                       </Button>
-                    </Link>
+                    </Link> */}
                   </Card.Body>
                 </Card>
               </Col>
