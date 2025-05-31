@@ -69,11 +69,9 @@ const wishlistSlice = createSlice({
       })
       .addCase(addToWishlist.fulfilled, (state, action) => {
         state.savedRoomIds.push(action.payload);
-        toast.success('Đã lưu phòng thành công');
       })
       .addCase(removeFromWishlist.fulfilled, (state, action) => {
         state.savedRoomIds = state.savedRoomIds.filter(id => id !== action.payload);
-        toast.success('Đã xóa khỏi danh sách yêu thích');
       });
   },
 });
