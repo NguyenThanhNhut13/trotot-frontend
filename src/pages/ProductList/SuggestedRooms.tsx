@@ -1,13 +1,14 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { Container, Row, Col, Card, Button, Spinner, Alert } from "react-bootstrap"
 import { Link, useNavigate } from "react-router-dom"
-import { FaHeart, FaMapMarkerAlt, FaEye, FaClock } from "react-icons/fa"
+import { FaHeart, FaMapMarkerAlt, FaEye } from "react-icons/fa"
+import { FaRegHeart } from "react-icons/fa" 
 import { useAppDispatch, useAppSelector, useResponsive } from "../../store/hook"
-import roomApi from "../../apis/room.api"
-import type { Room } from "../../types/room.type"
 import { fetchRecommendedRooms, resetRecommendations } from "../../store/slices/recommendationSlice"
+import { addToWishlist, removeFromWishlist, getSavedRoomIds } from "../../store/slices/wishlistSlice" 
+import { toast } from "react-toastify"
 
 interface SuggestedRoomsProps {
   onSaveRoom?: (roomId: number) => void
@@ -33,8 +34,14 @@ const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
   const { profile } = useAppSelector((state) => state.user);
   const { rooms: suggestedRooms, loading: isLoading, error, hasLoaded } = 
     useAppSelector((state) => state.recommendation);
+  
+  // Use wishlist state from Redux store - fixed to match actual structure
+  const wishlistState = useAppSelector((state) => state.wishlist);
+    
+  // Extract wishlist IDs for easier checking
+  const savedRoomIds = wishlistState.savedRoomIds || [];
 
-  // Chỉ fetch khi user đã đăng nhập
+  // Fetch recommendations when user is authenticated
   useEffect(() => {
     if (!isAuthenticated || !profile || hasLoaded) return;
 
@@ -44,6 +51,42 @@ const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
 
     return () => clearTimeout(timer);
   }, [dispatch, isAuthenticated, profile, hasLoaded]);
+  
+  // Fetch wishlist when component mounts and user is authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(getSavedRoomIds());
+    }
+  }, [dispatch, isAuthenticated]);
+  
+  // Handle save/unsave room using wishlist slice
+  const handleSaveRoom = (e: React.MouseEvent, roomId: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!isAuthenticated) {
+      // If not authenticated, use the parent's onSaveRoom handler if provided
+      if (onSaveRoom) {
+        onSaveRoom(roomId);
+      } else {
+        toast.info("Vui lòng đăng nhập để lưu phòng trọ");
+      }
+      return;
+    }
+    
+    // Use wishlist slice actions based on current state
+    if (savedRoomIds.includes(roomId)) {
+      dispatch(removeFromWishlist(roomId))
+        .unwrap()
+        .then(() => toast.success("Đã xóa khỏi danh sách yêu thích"))
+        .catch(() => toast.error("Không thể xóa khỏi danh sách yêu thích"));
+    } else {
+      dispatch(addToWishlist(roomId))
+        .unwrap()
+        .then(() => toast.success("Đã lưu tin thành công"))
+        .catch(() => toast.error("Không thể lưu tin"));
+    }
+  };
 
   // Không hiển thị gì nếu user chưa đăng nhập
   if (!isAuthenticated) {
@@ -112,7 +155,11 @@ const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
           <Row className="g-3">
             {suggestedRooms.map((room) => (
               <Col key={room.id} xs={12} sm={6} md={4} lg={3} className="mb-3">
-                <Card className="h-100 border-0 shadow-sm room-card">
+                <Card 
+                  className="h-100 border-0 shadow-sm room-card" 
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => navigate(`/phong-tro/${room.id}`)}
+                >
                   <div className="position-relative">
                     {/* Room Image */}
                     <div className="position-relative overflow-hidden" style={{ height: "200px" }}>
@@ -137,20 +184,20 @@ const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
                         {Math.floor(Math.random() * 100) + 10}
                       </div>
 
-                      {/* Heart icon */}
+                      {/* Heart icon - Updated to show filled/empty based on saved status */}
                       <div className="position-absolute top-0 start-0 m-2">
                         <Button
                           variant="light"
                           size="sm"
                           className="rounded-circle p-2 border-0"
                           style={{ width: "36px", height: "36px" }}
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            onSaveRoom?.(room.id)
-                          }}
+                          onClick={(e) => handleSaveRoom(e, room.id)}
                         >
-                          <FaHeart size={14} className="text-muted" />
+                          {savedRoomIds.includes(room.id) ? (
+                            <FaHeart size={14} className="text-danger" />
+                          ) : (
+                            <FaRegHeart size={14} className="text-muted" />
+                          )}
                         </Button>
                       </div>
 
@@ -200,7 +247,7 @@ const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
                     </div>
 
                     {/* Location */}
-                    <div className="d-flex align-items-center mb-2">
+                    <div className="d-flex align-items-center">
                       <FaMapMarkerAlt className="text-muted me-1" size={12} />
                       <span
                         className="text-muted text-truncate"
@@ -209,27 +256,7 @@ const SuggestedRooms = ({ onSaveRoom }: SuggestedRoomsProps) => {
                       >
                         {room.district}, {room.province}
                       </span>
-                    </div>
-
-                    {/* Time posted
-                    <div className="d-flex align-items-center mb-3">
-                      <FaClock className="text-muted me-1" size={12} />
-                      <span className="text-muted" style={{ fontSize: "0.75rem" }}>
-                        {formatTimeAgo(room.createdAt)}
-                      </span>
-                    </div> */}
-
-                    {/* View button
-                    <Link to={`/phong-tro/${room.id}`} className="text-decoration-none">
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        className="w-100 rounded-pill"
-                        style={{ fontSize: "0.85rem" }}
-                      >
-                        Xem chi tiết
-                      </Button>
-                    </Link> */}
+                    </div>               
                   </Card.Body>
                 </Card>
               </Col>
