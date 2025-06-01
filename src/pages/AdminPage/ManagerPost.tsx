@@ -199,20 +199,30 @@ export default function ManagerPost() {
     const config = getStatusConfig(status)
     const IconComponent = config.icon
 
+    // Use a soft gradient background and a subtle border for a more beautiful look
+    const gradientMap: Record<string, string> = {
+      "#28a745": "linear-gradient(90deg, #43e97b 0%, #38f9d7 100%)", // active
+      "#ffc107": "linear-gradient(90deg, #f7971e 0%, #ffd200 100%)", // pending
+      "#dc3545": "linear-gradient(90deg, #f857a6 0%, #ff5858 100%)", // rejected
+    }
+    const bgGradient = gradientMap[config.color] || "linear-gradient(90deg, #e0eafc 0%, #cfdef3 100%)"
+
     return (
       <Badge
         style={{
-          backgroundColor: config.bgColor,
-          color: config.color,
-          border: `1px solid ${config.color}`,
-          fontSize: "0.7rem",
+          background: bgGradient,
+          color: "#fff",
+          border: "none",
+          fontSize: "0.75rem",
           fontWeight: 600,
-          padding: "4px 8px",
-          borderRadius: "12px",
+          padding: "5px 12px",
+          borderRadius: "14px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
+          letterSpacing: "0.5px",
         }}
         className="d-flex align-items-center gap-1"
       >
-        <IconComponent size={8} />
+        <IconComponent size={10} style={{ marginRight: 4 }} />
         {config.label}
       </Badge>
     )
