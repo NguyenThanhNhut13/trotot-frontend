@@ -647,7 +647,7 @@ const RoomSearchPage = ({
 
       const response = await roomApi.searchRooms(searchRoomParams)
       if (response.data && response.data.data) {
-        const { content, totalElements, totalPages, size } = response.data.data
+        const { content, totalElements, totalPages, size, page } = response.data.data
 
         const transformedListings = content.map((item: Room) => ({
           id: item.id,
@@ -663,7 +663,7 @@ const RoomSearchPage = ({
         setListings(transformedListings)
         setFilteredListings(transformedListings)
         setPagination({
-          currentPage: page,
+          currentPage: typeof page !== "undefined" ? page : 0,
           totalPages: totalPages,
           totalElements: totalElements,
           size: size,
@@ -1214,7 +1214,7 @@ const RoomSearchPage = ({
                                   : "Chọn địa điểm"}
                           </span>
                         </Dropdown.Toggle>
-                        <Dropdown.Menu className="w-100 border-0 shadow rounded-3 p-0">
+                        <Dropdown.Menu className="w-100 border-0 shadow rounded-3 p-0" style={{ zIndex: 1050 }}>
                           {locationError ? (
                             <div className="p-3">
                               <div className="alert alert-danger border-0 rounded-3 mb-2">
@@ -1374,12 +1374,90 @@ const RoomSearchPage = ({
         )}
 
         {/* Results Header */}
-        <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-          <div className="d-flex align-items-center gap-3">
+        <div className="mb-4">
+          {/* Desktop Layout */}
+          <div className="d-none d-md-flex justify-content-between align-items-center">
             <h5 className="fw-bold mb-0">Tổng {pagination.totalElements.toLocaleString()} kết quả</h5>
 
-            {/* Filter Button for Mobile/Tablet */}
-            {(isMobile || isTablet) && (
+            {/* Sort Dropdown */}
+            <Dropdown>
+              <Dropdown.Toggle variant="outline-primary" className="d-flex align-items-center rounded-pill px-4">
+                {React.createElement(sortOptions.find((opt) => opt.value === sortBy)?.icon || FaClock, {
+                  className: "me-2",
+                  size: 14,
+                })}
+                {sortOptions.find((opt) => opt.value === sortBy)?.label || "Sắp xếp"}
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="border-0 shadow rounded-3">
+                {sortOptions.map((option) => (
+                  <Dropdown.Item
+                    key={option.value}
+                    onClick={() => handleSortChange(option.value)}
+                    className={sortBy === option.value ? "active" : ""}
+                  >
+                    <option.icon className="me-2" size={14} />
+                    {option.label}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
+
+          {/* Mobile Layout */}
+          <div className="d-md-none">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="fw-bold mb-0">Tổng {pagination.totalElements.toLocaleString()} kết quả</h6>
+            </div>
+
+            <div className="d-flex gap-2">
+              {/* Filter Button */}
+              <Button
+                variant="outline-primary"
+                className="d-flex align-items-center justify-content-center rounded-pill flex-fill"
+                onClick={() => setShowFilters(true)}
+                style={{ height: "44px" }}
+              >
+                <FaFilter className="me-2" size={14} />
+                Bộ lọc
+              </Button>
+
+              {/* Sort Dropdown */}
+              <Dropdown className="flex-fill">
+                <Dropdown.Toggle
+                  variant="outline-primary"
+                  className="w-100 d-flex align-items-center justify-content-center rounded-pill"
+                  style={{ height: "44px" }}
+                >
+                  {React.createElement(sortOptions.find((opt) => opt.value === sortBy)?.icon || FaClock, {
+                    className: "me-2",
+                    size: 14,
+                  })}
+                  <span className="d-none d-sm-inline">
+                    {sortOptions.find((opt) => opt.value === sortBy)?.label || "Sắp xếp"}
+                  </span>
+                  <span className="d-sm-none">Sắp xếp</span>
+                </Dropdown.Toggle>
+                <Dropdown.Menu className="border-0 shadow rounded-3 w-100">
+                  {sortOptions.map((option) => (
+                    <Dropdown.Item
+                      key={option.value}
+                      onClick={() => handleSortChange(option.value)}
+                      className={sortBy === option.value ? "active" : ""}
+                    >
+                      <option.icon className="me-2" size={14} />
+                      {option.label}
+                    </Dropdown.Item>
+                  ))}
+                </Dropdown.Menu>
+              </Dropdown>
+            </div>
+          </div>
+
+          {/* Tablet Layout */}
+          <div className="d-none d-sm-flex d-md-none justify-content-between align-items-center">
+            <div className="d-flex align-items-center gap-3">
+              <h6 className="fw-bold mb-0">Tổng {pagination.totalElements.toLocaleString()} kết quả</h6>
+
               <Button
                 variant="outline-primary"
                 className="d-flex align-items-center rounded-pill px-4"
@@ -1388,31 +1466,31 @@ const RoomSearchPage = ({
                 <FaFilter className="me-2" />
                 Bộ lọc
               </Button>
-            )}
-          </div>
+            </div>
 
-          {/* Sort Dropdown */}
-          <Dropdown>
-            <Dropdown.Toggle variant="outline-primary" className="d-flex align-items-center rounded-pill px-4">
-              {React.createElement(sortOptions.find((opt) => opt.value === sortBy)?.icon || FaClock, {
-                className: "me-2",
-                size: 14,
-              })}
-              {sortOptions.find((opt) => opt.value === sortBy)?.label || "Sắp xếp"}
-            </Dropdown.Toggle>
-            <Dropdown.Menu className="border-0 shadow rounded-3">
-              {sortOptions.map((option) => (
-                <Dropdown.Item
-                  key={option.value}
-                  onClick={() => handleSortChange(option.value)}
-                  className={sortBy === option.value ? "active" : ""}
-                >
-                  <option.icon className="me-2" size={14} />
-                  {option.label}
-                </Dropdown.Item>
-              ))}
-            </Dropdown.Menu>
-          </Dropdown>
+            {/* Sort Dropdown */}
+            <Dropdown>
+              <Dropdown.Toggle variant="outline-primary" className="d-flex align-items-center rounded-pill px-4">
+                {React.createElement(sortOptions.find((opt) => opt.value === sortBy)?.icon || FaClock, {
+                  className: "me-2",
+                  size: 14,
+                })}
+                {sortOptions.find((opt) => opt.value === sortBy)?.label || "Sắp xếp"}
+              </Dropdown.Toggle>
+              <Dropdown.Menu className="border-0 shadow rounded-3">
+                {sortOptions.map((option) => (
+                  <Dropdown.Item
+                    key={option.value}
+                    onClick={() => handleSortChange(option.value)}
+                    className={sortBy === option.value ? "active" : ""}
+                  >
+                    <option.icon className="me-2" size={14} />
+                    {option.label}
+                  </Dropdown.Item>
+                ))}
+              </Dropdown.Menu>
+            </Dropdown>
+          </div>
         </div>
 
         <Row className="g-4">
@@ -1655,7 +1733,7 @@ const RoomSearchPage = ({
       </div>
 
       {/* Custom Styles */}
-      <style >{`
+      <style>{`
         .room-card:hover {
           transform: translateY(-8px);
           box-shadow: 0 20px 40px rgba(0,70,168,0.15);
@@ -1671,6 +1749,10 @@ const RoomSearchPage = ({
         
         .cursor-pointer {
           cursor: pointer;
+        }
+
+        .dropdown-menu {
+          z-index: 1050 !important;
         }
         
         @media (max-width: 768px) {

@@ -76,7 +76,7 @@ export default function useRouteElement() {
             </ProtectedRoute>
           ),
         },{
-          path: "//manage-posts",
+          path: "/manage-posts",
           element: (
             <ProtectedRoute>
               <ManagerPost />
@@ -85,7 +85,7 @@ export default function useRouteElement() {
         },
         {
           path: "/favorites",
-         element: (
+          element: (
             <ProtectedRoute>
               <SavedRoom />
             </ProtectedRoute>
