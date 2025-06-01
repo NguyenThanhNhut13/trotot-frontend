@@ -44,33 +44,69 @@ const Header = () => {
       return
     }
 
+    // Kiểm tra role trong accessToken
+    const accessToken = localStorage.getItem("accessToken")
+    if (accessToken) {
+      try {
+        const payload = JSON.parse(atob(accessToken.split(".")[1]))
+        let roles: string[] = []
+        if (typeof payload.roles === "string") {
+          roles = payload.roles.split(",").map((r: string) => r.trim())
+        } else if (Array.isArray(payload.roles)) {
+          roles = payload.roles
+        }
+        if (roles.includes("LANDLORD") || roles.includes("ADMIN")) {
+          navigate("/post-room")
+          return
+        }
+      } catch (err) {
+        // Nếu lỗi parse token, tiếp tục xử lý nâng cấp
+      }
+    }
+
     try {
-      // Hiển thị thông báo đang xử lý
       toast.info("Đang chuẩn bị tài khoản để đăng tin...", {
         position: "top-right",
         autoClose: 2000,
       })
 
-      // Dispatch thunk upgradeUserRole
       const resultAction = await dispatch(upgradeUserRole())
-
-      await dispatch(checkAndRefreshToken()).unwrap()
-
-      // Kiểm tra kết quả dispatch
+      
+      // Check if the upgrade was successful
       if (upgradeUserRole.fulfilled.match(resultAction)) {
-        // Xử lý khi thành công
+        // Explicitly refresh the token to get the updated role
+        const tokenResult = await dispatch(checkAndRefreshToken()).unwrap()
+        
+        // Check if token refresh was successful
+        if (tokenResult) {
+          // Force decode the token again to verify the role update
+          const newAccessToken = localStorage.getItem("accessToken")
+          if (newAccessToken) {
+            const newPayload = JSON.parse(atob(newAccessToken.split(".")[1]))
+            let newRoles: string[] = []
+            
+            if (typeof newPayload.roles === "string") {
+              newRoles = newPayload.roles.split(",").map((r: string) => r.trim())
+            } else if (Array.isArray(newPayload.roles)) {
+              newRoles = newPayload.roles
+            }
+            
+            // Verify the role is actually updated
+            if (!newRoles.includes("LANDLORD")) {
+              // Token not properly updated, wait briefly and try once more
+              await new Promise(resolve => setTimeout(resolve, 1000))
+              await dispatch(checkAndRefreshToken()).unwrap()
+            }
+          }
+        }
+        
         toast.success("Tài khoản đã được nâng cấp thành chủ trọ!", {
           position: "top-right",
           autoClose: 3000,
         })
-
-        // Chuyển hướng đến trang đăng tin
         navigate("/post-room")
       } else if (upgradeUserRole.rejected.match(resultAction)) {
-        // Xử lý lỗi từ payload
         const errorPayload = resultAction.payload as any
-
-        // Kiểm tra lỗi 409 - đã có role phù hợp
         if (errorPayload?.status === 409) {
           toast.info("Bạn đã có quyền đăng tin!", {
             position: "top-right",
@@ -79,8 +115,6 @@ const Header = () => {
           navigate("/post-room")
           return
         }
-
-        // Xử lý các lỗi khác
         toast.error(`Không thể nâng cấp tài khoản: ${errorPayload?.message || "Vui lòng thử lại sau"}`, {
           position: "top-right",
           autoClose: 3000,
@@ -390,10 +424,6 @@ const Header = () => {
                       />
                     </Dropdown.Toggle>
                     <Dropdown.Menu className="py-2 shadow border-0 rounded-3" style={{ minWidth: "180px" }}>
-                      <div className="px-3 py-2 border-bottom">
-                        <small className="text-muted">Xin chào,</small>
-                        <div className="fw-bold text-primary">{profile.fullName}</div>
-                      </div>
                       <Dropdown.Item as={Link} to="/personal-info" className="py-3 px-3">
                         <FaUser className="text-primary me-3" size={14} />
                         Thông tin cá nhân

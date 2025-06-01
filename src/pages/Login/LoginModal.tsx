@@ -70,10 +70,6 @@ const LoginModal: React.FC<LoginModalProps> = ({ show, handleClose }) => {
         } catch (profileError: any) {
           // Ghi log chi tiết lỗi để debug
           console.error("Chi tiết lỗi khi tải profile:", profileError);
-          
-          // Không hiển thị lỗi này cho người dùng vì đăng nhập vẫn thành công
-          // Bạn có thể sử dụng toast.warn nếu muốn thông báo nhẹ nhàng
-          // toast.warn("Đã đăng nhập thành công nhưng không tải được thông tin người dùng");
         }
       }, 300);
 

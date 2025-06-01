@@ -153,6 +153,34 @@ export const checkAndRefreshToken = createAsyncThunk(
   }
 );
 
+export const refreshTokenFromServer = createAsyncThunk(
+  'auth/refreshTokenFromServer',
+  async (_, { rejectWithValue }) => {
+    try {
+      const storedAccessToken = localStorage.getItem("accessToken");
+      const refreshToken = localStorage.getItem("refreshToken");
+      if (!refreshToken) {
+        return rejectWithValue("No refresh token available");
+      }
+      
+      // Call your API endpoint to refresh the token
+      const response = await authApi.refreshToken({ accessToken: storedAccessToken as string, refreshToken });
+      
+      // Update tokens in localStorage
+      const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", newRefreshToken);
+      
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue({
+        message: error.response?.data?.message || 'Failed to refresh token',
+        status: error.response?.status
+      });
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
