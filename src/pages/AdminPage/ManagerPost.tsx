@@ -1,8 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Container, Row, Col, Card, Table, Button, Badge, Spinner, Form, InputGroup } from "react-bootstrap"
-import Sidebar from "../MainPage/Sidebar"
+import { Card, Table, Button, Badge, Spinner, Form, InputGroup } from "react-bootstrap"
+import { SidebarLayout } from "../MainPage/Sidebar"
 import roomApi from "../../apis/room.api"
 import { formatCurrency } from "../../utils/utils"
 import { useNavigate } from "react-router-dom"
@@ -27,7 +27,7 @@ import { useAppSelector, useResponsive } from "../../store/hook"
 export default function ManagerPost() {
   const navigate = useNavigate()
   const { profile } = useAppSelector((state) => state.user)
-  const { isMobile, isTablet } = useResponsive()
+  const { isMobile } = useResponsive()
   const [rooms, setRooms] = useState<Room[]>([])
   const [filteredRooms, setFilteredRooms] = useState<Room[]>([])
   const [loading, setLoading] = useState(true)
@@ -76,7 +76,7 @@ export default function ManagerPost() {
         total: roomsData.length,
         active: activeRooms,
         pending: pendingRooms,
-        rejected: rejectedRooms
+        rejected: rejectedRooms,
       })
 
       setRooms(roomsData)
@@ -203,14 +203,6 @@ export default function ManagerPost() {
     return date.toLocaleDateString("vi-VN")
   }
 
-  const getResponsiveLayout = () => {
-    if (isMobile) return { sidebarWidth: "100%", mainWidth: "100%", showSidebar: false }
-    if (isTablet) return { sidebarWidth: "280px", mainWidth: "calc(100% - 280px)", showSidebar: true }
-    return { sidebarWidth: "320px", mainWidth: "calc(100% - 320px)", showSidebar: true }
-  }
-
-  const layout = getResponsiveLayout()
-
   const statsCards = [
     { title: "Tổng tin đăng", value: stats.total, color: "primary", icon: FaHome },
     { title: "Đang hoạt động", value: stats.active, color: "success", icon: FaCheckCircle },
@@ -220,350 +212,318 @@ export default function ManagerPost() {
 
   if (loading) {
     return (
-      <Container fluid className="p-0">
-        <Row className="m-0" style={{ minHeight: "100vh" }}>
-          {layout.showSidebar && (
-            <Col style={{ width: layout.sidebarWidth, minWidth: layout.sidebarWidth }}>
-              <Sidebar />
-            </Col>
-          )}
-          <Col className="d-flex justify-content-center align-items-center" style={{ width: layout.mainWidth }}>
-            <div className="text-center">
-              <Spinner animation="border" variant="primary" />
-              <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
-            </div>
-          </Col>
-        </Row>
-      </Container>
+      <SidebarLayout>
+        <div className="d-flex justify-content-center align-items-center" style={{ height: "60vh" }}>
+          <div className="text-center">
+            <Spinner animation="border" variant="primary" />
+            <p className="mt-3 text-muted">Đang tải dữ liệu...</p>
+          </div>
+        </div>
+      </SidebarLayout>
     )
   }
 
   if (error) {
     return (
-      <Container fluid className="p-0">
-        <Row className="m-0" style={{ minHeight: "100vh" }}>
-          {layout.showSidebar && (
-            <Col style={{ width: layout.sidebarWidth, minWidth: layout.sidebarWidth }}>
-              <Sidebar />
-            </Col>
-          )}
-          <Col className="p-4" style={{ width: layout.mainWidth }}>
-            <div className="alert alert-danger d-flex align-items-center">
-              <FaExclamationTriangle className="me-3" size={24} />
-              <div>
-                <h6 className="mb-1">Có lỗi xảy ra</h6>
-                <p className="mb-2">{error}</p>
-                <Button variant="outline-danger" size="sm" onClick={() => fetchRooms()}>
-                  Thử lại
-                </Button>
-              </div>
-            </div>
-          </Col>
-        </Row>
-      </Container>
+      <SidebarLayout>
+        <div className="alert alert-danger d-flex align-items-center">
+          <FaExclamationTriangle className="me-3" size={24} />
+          <div>
+            <h6 className="mb-1">Có lỗi xảy ra</h6>
+            <p className="mb-2">{error}</p>
+            <Button variant="outline-danger" size="sm" onClick={() => fetchRooms()}>
+              Thử lại
+            </Button>
+          </div>
+        </div>
+      </SidebarLayout>
     )
   }
 
   return (
-    <Container fluid className="p-0">
-      <Row className="m-0" style={{ minHeight: "100vh" }}>
-        {/* Sidebar */}
-        {layout.showSidebar && (
-          <Col className="p-0" style={{ width: layout.sidebarWidth, minWidth: layout.sidebarWidth }}>
-            <Sidebar />
-          </Col>
-        )}
-
-        {/* Main Content */}
-        <Col className={`${isMobile ? "p-3" : "p-4"}`} style={{ width: layout.mainWidth }}>
-          {/* Header */}
-          <div className="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h2 className="text-primary fw-bold mb-1">
-                <FaChartLine className="me-2" />
-                QUẢN LÝ TIN ĐĂNG
-              </h2>
-              <p className="text-muted mb-0">Quản lý và theo dõi các tin đăng của bạn</p>
-            </div>
-            <Button
-              variant="primary"
-              className="d-flex align-items-center"
-              onClick={() => navigate("/post-room")}
-              style={{
-                background: "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)",
-                border: "none",
-                borderRadius: "12px",
-              }}
-            >
-              <FaPlus className="me-2" />
-              {isMobile ? "Đăng tin" : "Đăng tin mới"}
-            </Button>
+    <SidebarLayout>
+      <div className="d-flex flex-column gap-4">
+        {/* Header */}
+        <div className="d-flex justify-content-between align-items-center">
+          <div>
+            <h2 className="text-primary fw-bold mb-1 d-flex align-items-center">
+              <FaChartLine className="me-2" />
+              QUẢN LÝ TIN ĐĂNG
+            </h2>
+            <p className="text-muted mb-0">Quản lý và theo dõi các tin đăng của bạn</p>
           </div>
+          <Button
+            variant="primary"
+            className="d-flex align-items-center"
+            onClick={() => navigate("/post-room")}
+            style={{
+              background: "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)",
+              border: "none",
+              borderRadius: "12px",
+            }}
+          >
+            <FaPlus className="me-2" />
+            {isMobile ? "Đăng tin" : "Đăng tin mới"}
+          </Button>
+        </div>
 
-          {/* Statistics Cards */}
-          <Row className="mb-4">
-            {statsCards.map((stat, index) => {
-              const IconComponent = stat.icon
-              return (
-                <Col key={index} xs={6} md={4} lg={isMobile ? 6 : 2} className="mb-3">
-                  <Card
-                    className={`text-white bg-${stat.color} h-100 border-0 shadow-sm`}
-                    style={{
-                      borderRadius: "16px",
-                      background: `linear-gradient(135deg, var(--bs-${stat.color}) 0%, var(--bs-${stat.color}) 100%)`,
-                      transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "translateY(-4px)"
-                      e.currentTarget.style.boxShadow = "0 8px 25px rgba(0,0,0,0.15)"
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)"
-                      e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)"
-                    }}
-                  >
-                    <Card.Body className="p-3 text-center">
-                      <div className="d-flex align-items-center justify-content-center mb-2">
-                        <IconComponent size={isMobile ? 20 : 24} />
-                      </div>
-                      <Card.Title className="mb-1" style={{ fontSize: isMobile ? "0.8rem" : "0.9rem" }}>
-                        {stat.title}
-                      </Card.Title>
-                      <Card.Text className="fw-bold mb-0" style={{ fontSize: isMobile ? "1.5rem" : "2rem" }}>
-                        {stat.value}
-                      </Card.Text>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              )
-            })}
-          </Row>
-
-          {/* Filters and Search */}
-          <Card className="mb-4 border-0 shadow-sm" style={{ borderRadius: "16px" }}>
-            <Card.Body className="p-3">
-              <Row className="g-3">
-                <Col xs={12} md={6} lg={4}>
-                  <InputGroup>
-                    <InputGroup.Text className="bg-light border-end-0">
-                      <FaSearch className="text-muted" />
-                    </InputGroup.Text>
-                    <Form.Control
-                      type="text"
-                      placeholder="Tìm kiếm tin đăng..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="border-start-0"
-                      style={{ borderRadius: "0 8px 8px 0" }}
-                    />
-                  </InputGroup>
-                </Col>
-
-                <Col xs={6} md={3} lg={2}>
-                  <Form.Select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    style={{ borderRadius: "8px" }}
-                  >
-                    <option value="all">Tất cả trạng thái</option>
-                    <option value="active">Đang hoạt động</option>
-                    <option value="pending">Chờ duyệt</option>
-                    <option value="rejected">Bị từ chối</option>
-                    <option value="expired">Hết hạn</option>
-                  </Form.Select>
-                </Col>
-
-                <Col xs={6} md={3} lg={2}>
-                  <Form.Select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    style={{ borderRadius: "8px" }}
-                  >
-                    <option value="newest">Mới nhất</option>
-                    <option value="oldest">Cũ nhất</option>
-                    <option value="price-high">Giá cao → thấp</option>
-                    <option value="price-low">Giá thấp → cao</option>
-                    <option value="area-large">Diện tích lớn → nhỏ</option>
-                    <option value="area-small">Diện tích nhỏ → lớn</option>
-                  </Form.Select>
-                </Col>
-              </Row>
-            </Card.Body>
-          </Card>
-
-          {/* Results Info */}
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <h5 className="fw-bold mb-0 text-primary">DANH SÁCH TIN ĐĂNG ({filteredRooms.length})</h5>
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={() => fetchRooms()}
-              className="d-flex align-items-center"
-              style={{ borderRadius: "8px" }}
-            >
-              <FaSort className="me-2" />
-              Làm mới
-            </Button>
-          </div>
-
-          {/* Room Listings */}
-          <Card className="border-0 shadow-sm" style={{ borderRadius: "16px" }}>
-            {filteredRooms.length === 0 ? (
-              <Card.Body className="text-center py-5">
-                <FaHome size={48} className="text-muted mb-3" />
-                <h5 className="text-muted mb-3">
-                  {searchTerm || statusFilter !== "all"
-                    ? "Không tìm thấy tin đăng phù hợp"
-                    : "Bạn chưa có tin đăng nào"}
-                </h5>
-                <Button
-                  variant="primary"
-                  onClick={() => navigate("/post-room")}
-                  className="d-flex align-items-center mx-auto"
+        {/* Statistics Cards */}
+        <div className="row g-3">
+          {statsCards.map((stat, index) => {
+            const IconComponent = stat.icon
+            return (
+              <div key={index} className={`col-${isMobile ? "6" : "12 col-sm-6 col-md-4 col-lg-2"}`}>
+                <Card
+                  className={`text-white bg-${stat.color} h-100 border-0 shadow-sm`}
                   style={{
-                    background: "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)",
-                    border: "none",
-                    borderRadius: "12px",
+                    borderRadius: "16px",
+                    background: `linear-gradient(135deg, var(--bs-${stat.color}) 0%, var(--bs-${stat.color}) 100%)`,
+                    transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "translateY(-4px)"
+                    e.currentTarget.style.boxShadow = "0 8px 25px rgba(0,0,0,0.15)"
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "translateY(0)"
+                    e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)"
                   }}
                 >
-                  <FaPlus className="me-2" />
-                  Đăng tin mới
-                </Button>
-              </Card.Body>
-            ) : (
-              <div className="table-responsive">
-                <Table hover className="mb-0">
-                  <thead style={{ backgroundColor: "#f8f9fa" }}>
-                    <tr>
-                      <th className="border-0 py-3 text-center" style={{ width: "60px" }}>
-                        #
-                      </th>
-                      <th className="border-0 py-3">Tin đăng</th>
-                      {!isMobile && <th className="border-0 py-3">Giá</th>}
-                      {!isMobile && <th className="border-0 py-3">Diện tích</th>}
-                      {!isMobile && <th className="border-0 py-3">Loại</th>}
-                      {!isMobile && <th className="border-0 py-3">Địa điểm</th>}
-                      <th className="border-0 py-3">Trạng thái</th>
-                      <th className="border-0 py-3 text-center" style={{ width: "120px" }}>
-                        Thao tác
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredRooms.map((room, index) => (
-                      <tr key={room.id} style={{ borderBottom: "1px solid #f1f3f4" }}>
-                        <td className="py-3 text-center text-muted">{index + 1}</td>
-                        <td className="py-3">
-                          <div className="d-flex align-items-center">
+                  <Card.Body className="p-3 text-center">
+                    <div className="d-flex align-items-center justify-content-center mb-2">
+                      <IconComponent size={isMobile ? 20 : 24} />
+                    </div>
+                    <Card.Title className="mb-1" style={{ fontSize: isMobile ? "0.8rem" : "0.9rem" }}>
+                      {stat.title}
+                    </Card.Title>
+                    <Card.Text className="fw-bold mb-0" style={{ fontSize: isMobile ? "1.5rem" : "2rem" }}>
+                      {stat.value}
+                    </Card.Text>
+                  </Card.Body>
+                </Card>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Filters and Search */}
+        <Card className="border-0 shadow-sm" style={{ borderRadius: "16px" }}>
+          <Card.Body className="p-3">
+            <div className="row g-3">
+              <div className="col-12 col-md-6 col-lg-4">
+                <InputGroup>
+                  <InputGroup.Text className="bg-light border-end-0">
+                    <FaSearch className="text-muted" />
+                  </InputGroup.Text>
+                  <Form.Control
+                    type="text"
+                    placeholder="Tìm kiếm tin đăng..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="border-start-0"
+                    style={{ borderRadius: "0 8px 8px 0" }}
+                  />
+                </InputGroup>
+              </div>
+
+              <div className="col-6 col-md-3 col-lg-2">
+                <Form.Select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  style={{ borderRadius: "8px" }}
+                >
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="active">Đang hoạt động</option>
+                  <option value="pending">Chờ duyệt</option>
+                  <option value="rejected">Bị từ chối</option>
+                  <option value="expired">Hết hạn</option>
+                </Form.Select>
+              </div>
+
+              <div className="col-6 col-md-3 col-lg-2">
+                <Form.Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ borderRadius: "8px" }}>
+                  <option value="newest">Mới nhất</option>
+                  <option value="oldest">Cũ nhất</option>
+                  <option value="price-high">Giá cao → thấp</option>
+                  <option value="price-low">Giá thấp → cao</option>
+                  <option value="area-large">Diện tích lớn → nhỏ</option>
+                  <option value="area-small">Diện tích nhỏ → lớn</option>
+                </Form.Select>
+              </div>
+            </div>
+          </Card.Body>
+        </Card>
+
+        {/* Results Info */}
+        <div className="d-flex justify-content-between align-items-center">
+          <h5 className="fw-bold mb-0 text-primary">DANH SÁCH TIN ĐĂNG ({filteredRooms.length})</h5>
+          <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={() => fetchRooms()}
+            className="d-flex align-items-center"
+            style={{ borderRadius: "8px" }}
+          >
+            <FaSort className="me-2" />
+            Làm mới
+          </Button>
+        </div>
+
+        {/* Room Listings */}
+        <Card className="border-0 shadow-sm" style={{ borderRadius: "16px" }}>
+          {filteredRooms.length === 0 ? (
+            <Card.Body className="text-center py-5">
+              <FaHome size={48} className="text-muted mb-3" />
+              <h5 className="text-muted mb-3">
+                {searchTerm || statusFilter !== "all" ? "Không tìm thấy tin đăng phù hợp" : "Bạn chưa có tin đăng nào"}
+              </h5>
+              <Button
+                variant="primary"
+                onClick={() => navigate("/post-room")}
+                className="d-flex align-items-center mx-auto"
+                style={{
+                  background: "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)",
+                  border: "none",
+                  borderRadius: "12px",
+                }}
+              >
+                <FaPlus className="me-2" />
+                Đăng tin mới
+              </Button>
+            </Card.Body>
+          ) : (
+            <div className="table-responsive">
+              <Table hover className="mb-0">
+                <thead style={{ backgroundColor: "#f8f9fa" }}>
+                  <tr>
+                    <th className="border-0 py-3 text-center" style={{ width: "60px" }}>
+                      #
+                    </th>
+                    <th className="border-0 py-3">Tin đăng</th>
+                    {!isMobile && <th className="border-0 py-3">Giá</th>}
+                    {!isMobile && <th className="border-0 py-3">Diện tích</th>}
+                    {!isMobile && <th className="border-0 py-3">Loại</th>}
+                    {!isMobile && <th className="border-0 py-3">Địa điểm</th>}
+                    <th className="border-0 py-3">Trạng thái</th>
+                    <th className="border-0 py-3 text-center" style={{ width: "120px" }}>
+                      Thao tác
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredRooms.map((room, index) => (
+                    <tr key={room.id} style={{ borderBottom: "1px solid #f1f3f4" }}>
+                      <td className="py-3 text-center text-muted">{index + 1}</td>
+                      <td className="py-3">
+                        <div className="d-flex align-items-center">
+                          <div
+                            className="me-3 rounded-3 bg-light d-flex align-items-center justify-content-center"
+                            style={{
+                              width: isMobile ? 40 : 50,
+                              height: isMobile ? 40 : 50,
+                              backgroundImage: room.images?.[0]?.imageUrl
+                                ? `url(${room.images[0].imageUrl})`
+                                : undefined,
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
+                              flexShrink: 0,
+                            }}
+                          >
+                            {!room.images?.[0]?.imageUrl && <FaHome className="text-secondary" size={20} />}
+                          </div>
+                          <div style={{ minWidth: 0 }}>
                             <div
-                              className="me-3 rounded-3 bg-light d-flex align-items-center justify-content-center"
+                              className="fw-medium mb-1"
                               style={{
-                                width: isMobile ? 40 : 50,
-                                height: isMobile ? 40 : 50,
-                                backgroundImage: room.images?.[0]?.imageUrl
-                                  ? `url(${room.images[0].imageUrl})`
-                                  : undefined,
-                                backgroundSize: "cover",
-                                backgroundPosition: "center",
-                                flexShrink: 0,
+                                fontSize: isMobile ? "0.9rem" : "1rem",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                maxWidth: isMobile ? "150px" : "200px",
                               }}
                             >
-                              {!room.images?.[0]?.imageUrl && <FaHome className="text-secondary" size={20} />}
+                              {room.title}
                             </div>
-                            <div style={{ minWidth: 0 }}>
-                              <div
-                                className="fw-medium mb-1"
-                                style={{
-                                  fontSize: isMobile ? "0.9rem" : "1rem",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                  maxWidth: isMobile ? "150px" : "200px",
-                                }}
-                              >
-                                {room.title}
-                              </div>
-                              {isMobile && (
-                                <div className="small text-muted">
-                                  <div className="text-danger fw-bold">{formatCurrency(room.price)} đ</div>
-                                  <div>
-                                    {room.area} m² • {getRoomTypeLabel(room.roomType)}
-                                  </div>
+                            {isMobile && (
+                              <div className="small text-muted">
+                                <div className="text-danger fw-bold">{formatCurrency(room.price)} đ</div>
+                                <div>
+                                  {room.area} m² • {getRoomTypeLabel(room.roomType)}
                                 </div>
-                              )}
-                            </div>
-                          </div>
-                        </td>
-                        {!isMobile && (
-                          <>
-                            <td className="py-3">
-                              <span className="text-danger fw-bold">{formatCurrency(room.price)} đ</span>
-                            </td>
-                            <td className="py-3">{room.area} m²</td>
-                            <td className="py-3">
-                              <Badge bg="light" text="dark" className="border">
-                                {getRoomTypeLabel(room.roomType)}
-                              </Badge>
-                            </td>
-                            <td className="py-3">
-                              <div
-                                style={{
-                                  maxWidth: "150px",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                }}
-                              >
-                                {room.district ? `${room.district}, ${room.province}` : "Không có địa chỉ"}
                               </div>
-                            </td>
-                          </>
-                        )}
-                        <td className="py-3">{getStatusBadge(room.forGender || "ALL")}</td>
-                        <td className="py-3 text-center">
-                          <div className="d-flex justify-content-center gap-1">
-                            <Button
-                              variant="outline-primary"
-                              size="sm"
-                              className="rounded-circle p-2"
-                              title="Xem chi tiết"
-                              onClick={() => handleView(room.id)}
-                              style={{ width: "32px", height: "32px" }}
-                            >
-                              <FaEye size={12} />
-                            </Button>
-                            <Button
-                              variant="outline-success"
-                              size="sm"
-                              className="rounded-circle p-2"
-                              title="Chỉnh sửa"
-                              onClick={() => handleUpdate(room.id)}
-                              style={{ width: "32px", height: "32px" }}
-                            >
-                              <FaEdit size={12} />
-                            </Button>
-                            <Button
-                              variant="outline-danger"
-                              size="sm"
-                              className="rounded-circle p-2"
-                              title="Xóa"
-                              onClick={() => handleDelete(room.id)}
-                              style={{ width: "32px", height: "32px" }}
-                            >
-                              <FaTrash size={12} />
-                            </Button>
+                            )}
                           </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </Table>
-              </div>
-            )}
-          </Card>
-        </Col>
-      </Row>
-    </Container>
+                        </div>
+                      </td>
+                      {!isMobile && (
+                        <>
+                          <td className="py-3">
+                            <span className="text-danger fw-bold">{formatCurrency(room.price)} đ</span>
+                          </td>
+                          <td className="py-3">{room.area} m²</td>
+                          <td className="py-3">
+                            <Badge bg="light" text="dark" className="border">
+                              {getRoomTypeLabel(room.roomType)}
+                            </Badge>
+                          </td>
+                          <td className="py-3">
+                            <div
+                              style={{
+                                maxWidth: "150px",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {room.district ? `${room.district}, ${room.province}` : "Không có địa chỉ"}
+                            </div>
+                          </td>
+                        </>
+                      )}
+                      <td className="py-3">{getStatusBadge(room.forGender || "ALL")}</td>
+                      <td className="py-3 text-center">
+                        <div className="d-flex justify-content-center gap-1">
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            className="rounded-circle p-2"
+                            title="Xem chi tiết"
+                            onClick={() => handleView(room.id)}
+                            style={{ width: "32px", height: "32px" }}
+                          >
+                            <FaEye size={12} />
+                          </Button>
+                          <Button
+                            variant="outline-success"
+                            size="sm"
+                            className="rounded-circle p-2"
+                            title="Chỉnh sửa"
+                            onClick={() => handleUpdate(room.id)}
+                            style={{ width: "32px", height: "32px" }}
+                          >
+                            <FaEdit size={12} />
+                          </Button>
+                          <Button
+                            variant="outline-danger"
+                            size="sm"
+                            className="rounded-circle p-2"
+                            title="Xóa"
+                            onClick={() => handleDelete(room.id)}
+                            style={{ width: "32px", height: "32px" }}
+                          >
+                            <FaTrash size={12} />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          )}
+        </Card>
+      </div>
+    </SidebarLayout>
   )
 }
