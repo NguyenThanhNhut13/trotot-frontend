@@ -1,8 +1,6 @@
 "use client"
-
-import { useState } from "react"
-import { Card, Form, Button } from "react-bootstrap"
-import { Line, Doughnut, Bar } from "react-chartjs-2"
+import { Card, Form } from "react-bootstrap"
+import { Line } from "react-chartjs-2"
 import { SidebarLayout } from "../MainPage/Sidebar"
 import {
   Chart as ChartJS,
@@ -13,85 +11,27 @@ import {
   Title,
   Tooltip,
   Legend,
-  ArcElement,
-  BarElement,
 } from "chart.js"
-import { FaChartLine, FaEye, FaHeart, FaPhone, FaCalendarAlt, FaUsers, FaMapMarkerAlt } from "react-icons/fa"
-import { PiTrendUpBold } from "react-icons/pi"
 import { useResponsive } from "../../store/hook"
+import { FaChartLine, FaHome, FaFire, FaRegBuilding, FaLock, FaCheckCircle } from "react-icons/fa"
 
 // Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, ArcElement, BarElement)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
 
 const GeneralStatsPage = () => {
   const { isMobile } = useResponsive()
-  const [timeRange, setTimeRange] = useState("7days")
-  const [isLoading, setIsLoading] = useState(false)
 
-  // Mock data - replace with real API calls
-  const [stats, setStats] = useState({
-    totalRooms: 24,
-    activeRooms: 18,
-    hotRooms: 6,
-    normalRooms: 12,
-    closedRooms: 3,
-    blockedRooms: 3,
-    totalViews: 1250,
-    totalLikes: 89,
-    totalCalls: 156,
-    conversionRate: 12.5,
-  })
-
-  // Chart data
-  const viewsChartData = {
-    labels:
-      timeRange === "7days"
-        ? ["17/04", "18/04", "19/04", "20/04", "21/04", "22/04", "23/04"]
-        : timeRange === "30days"
-          ? ["Tuần 1", "Tuần 2", "Tuần 3", "Tuần 4"]
-          : ["Tháng 1", "Tháng 2", "Tháng 3"],
+  // Data for the line chart (last 7 days views)
+  const chartData = {
+    labels: ["17/04/2025", "18/04/2025", "19/04/2025", "20/04/2025", "21/04/2025", "22/04/2025", "23/04/2025"],
     datasets: [
       {
         label: "Lượt xem",
-        data:
-          timeRange === "7days"
-            ? [45, 52, 38, 67, 89, 76, 95]
-            : timeRange === "30days"
-              ? [320, 450, 380, 520]
-              : [1200, 1450, 1250],
-        borderColor: "#0046a8",
-        backgroundColor: "rgba(0, 70, 168, 0.1)",
+        data: [0, 0, 0, 0, 0, 0, 0], // Placeholder data (all 0 as per screenshot)
+        borderColor: "#007bff",
+        backgroundColor: "rgba(0, 123, 255, 0.1)",
         fill: true,
         tension: 0.4,
-        pointBackgroundColor: "#0046a8",
-        pointBorderColor: "#ffffff",
-        pointBorderWidth: 2,
-        pointRadius: 6,
-      },
-    ],
-  }
-
-  const roomTypeChartData = {
-    labels: ["Phòng trọ", "Nhà nguyên căn", "Căn hộ"],
-    datasets: [
-      {
-        data: [stats.totalRooms * 0.6, stats.totalRooms * 0.25, stats.totalRooms * 0.15],
-        backgroundColor: ["#0046a8", "#28a745", "#ffc107"],
-        borderWidth: 0,
-      },
-    ],
-  }
-
-  const performanceChartData = {
-    labels: ["Lượt xem", "Lượt thích", "Lượt gọi"],
-    datasets: [
-      {
-        label: "Hiệu suất",
-        data: [stats.totalViews, stats.totalLikes, stats.totalCalls],
-        backgroundColor: ["rgba(0, 70, 168, 0.8)", "rgba(220, 53, 69, 0.8)", "rgba(40, 167, 69, 0.8)"],
-        borderColor: ["#0046a8", "#dc3545", "#28a745"],
-        borderWidth: 2,
-        borderRadius: 8,
       },
     ],
   }
@@ -101,86 +41,46 @@ const GeneralStatsPage = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: {
-        display: false,
+        display: false, // Hide legend as per screenshot
       },
-      tooltip: {
-        backgroundColor: "rgba(0, 0, 0, 0.8)",
-        titleColor: "#ffffff",
-        bodyColor: "#ffffff",
-        borderColor: "#0046a8",
-        borderWidth: 1,
+      title: {
+        display: false,
       },
     },
     scales: {
       y: {
         beginAtZero: true,
         grid: {
-          color: "rgba(0, 0, 0, 0.1)",
-        },
-        ticks: {
-          color: "#6c757d",
+          color: "rgba(0, 0, 0, 0.05)",
         },
       },
       x: {
         grid: {
           display: false,
         },
-        ticks: {
-          color: "#6c757d",
-        },
-      },
-    },
-  }
-
-  const doughnutOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        position: "bottom" as const,
-        labels: {
-          padding: 20,
-          usePointStyle: true,
-        },
       },
     },
   }
 
   const statsCards = [
-    { title: "Tổng số trọ", value: stats.totalRooms, color: "primary", icon: FaMapMarkerAlt, change: "+12%" },
-    { title: "Trọ Hot", value: stats.hotRooms, color: "warning", icon: PiTrendUpBold, change: "+25%" },
-    { title: "Trọ thường", value: stats.normalRooms, color: "info", icon: FaMapMarkerAlt, change: "+5%" },
-    { title: "Trọ đã đóng", value: stats.closedRooms, color: "secondary", icon: FaMapMarkerAlt, change: "-2%" },
-    { title: "Bị khóa", value: stats.blockedRooms, color: "danger", icon: FaMapMarkerAlt, change: "0%" },
-  ]
-
-  const performanceCards = [
-    { title: "Tổng lượt xem", value: stats.totalViews, icon: FaEye, color: "primary" },
-    { title: "Lượt thích", value: stats.totalLikes, icon: FaHeart, color: "danger" },
-    { title: "Tỷ lệ chuyển đổi", value: `${stats.conversionRate}%`, icon: PiTrendUpBold, color: "warning" },
+    { title: "Tổng số trọ", value: 0, color: "primary", icon: FaHome },
+    { title: "Trọ đang hoạt động", value: 0, color: "success", icon: FaCheckCircle },
+    { title: "Trọ Hot", value: 0, color: "warning", icon: FaFire },
+    { title: "Trọ thường", value: 0, color: "primary", icon: FaRegBuilding },
+    { title: "Trọ đã đóng", value: 0, color: "secondary", icon: FaHome },
+    { title: "Bị khóa", value: 0, color: "danger", icon: FaLock },
   ]
 
   return (
     <SidebarLayout>
       <div className="d-flex flex-column gap-4">
         {/* Header */}
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <h2 className="text-primary fw-bold mb-1 d-flex align-items-center">
-              <FaChartLine className="me-2" />
-              THỐNG KÊ TỔNG QUAN
-            </h2>
-            <p className="text-muted mb-0">Theo dõi hiệu suất và phân tích dữ liệu</p>
-          </div>
-          <Button
-            variant="outline-primary"
-            size="sm"
-            className="d-flex align-items-center"
-            style={{ borderRadius: "8px" }}
-          >
-            <FaCalendarAlt className="me-2" />
-            Xuất báo cáo
-          </Button>
+        <div>
+          <h2 className="text-primary fw-bold mb-1 d-flex align-items-center">
+            <FaChartLine className="me-2" />
+            THÔNG TIN CHUNG
+          </h2>
+          <p className="text-muted mb-0">Thống kê và theo dõi hoạt động của bạn</p>
         </div>
 
         {/* Statistics Cards */}
@@ -190,7 +90,7 @@ const GeneralStatsPage = () => {
             return (
               <div key={index} className={`col-${isMobile ? "6" : "12 col-sm-6 col-md-4 col-lg-2"}`}>
                 <Card
-                  className={`text-white bg-${stat.color} h-100 border-0 shadow-sm position-relative overflow-hidden`}
+                  className={`text-white bg-${stat.color} h-100 border-0 shadow-sm`}
                   style={{
                     borderRadius: "16px",
                     background: `linear-gradient(135deg, var(--bs-${stat.color}) 0%, var(--bs-${stat.color}) 100%)`,
@@ -206,56 +106,16 @@ const GeneralStatsPage = () => {
                     e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.1)"
                   }}
                 >
-                  <Card.Body className="p-3 text-center position-relative">
+                  <Card.Body className="p-3 text-center">
                     <div className="d-flex align-items-center justify-content-center mb-2">
                       <IconComponent size={isMobile ? 20 : 24} />
                     </div>
-                    <Card.Title className="mb-1" style={{ fontSize: isMobile ? "0.75rem" : "0.85rem" }}>
+                    <Card.Title className="mb-1" style={{ fontSize: isMobile ? "0.8rem" : "0.9rem" }}>
                       {stat.title}
                     </Card.Title>
-                    <Card.Text className="fw-bold mb-1" style={{ fontSize: isMobile ? "1.5rem" : "2rem" }}>
+                    <Card.Text className="fw-bold mb-0" style={{ fontSize: isMobile ? "1.5rem" : "2rem" }}>
                       {stat.value}
                     </Card.Text>
-                    <small className="opacity-75" style={{ fontSize: "0.7rem" }}>
-                      {stat.change}
-                    </small>
-                  </Card.Body>
-                  {/* Decorative element */}
-                  <div
-                    className="position-absolute"
-                    style={{
-                      top: "-20px",
-                      right: "-20px",
-                      width: "60px",
-                      height: "60px",
-                      backgroundColor: "rgba(255,255,255,0.1)",
-                      borderRadius: "50%",
-                    }}
-                  />
-                </Card>
-              </div>
-            )
-          })}
-        </div>
-
-        {/* Performance Cards */}
-        <div className="row g-3">
-          {performanceCards.map((card, index) => {
-            const IconComponent = card.icon
-            return (
-              <div key={index} className="col-6 col-md-3">
-                <Card className="border-0 shadow-sm h-100" style={{ borderRadius: "16px" }}>
-                  <Card.Body className="p-3 text-center">
-                    <div
-                      className={`d-inline-flex align-items-center justify-content-center rounded-circle mb-3 text-${card.color}`}
-                      style={{ width: 50, height: 50, backgroundColor: `var(--bs-${card.color})15` }}
-                    >
-                      <IconComponent size={24} />
-                    </div>
-                    <h6 className="text-muted mb-1" style={{ fontSize: "0.85rem" }}>
-                      {card.title}
-                    </h6>
-                    <h4 className={`fw-bold text-${card.color} mb-0`}>{card.value}</h4>
                   </Card.Body>
                 </Card>
               </div>
@@ -263,67 +123,31 @@ const GeneralStatsPage = () => {
           })}
         </div>
 
-        {/* Charts Section */}
-        <div className="row g-4">
-          {/* Views Chart */}
-          <div className="col-12 col-lg-8">
-            <Card className="border-0 shadow-sm h-100" style={{ borderRadius: "16px" }}>
-              <Card.Header className="bg-transparent border-0 p-4 pb-0">
-                <div className="d-flex justify-content-between align-items-center">
-                  <h5 className="fw-bold text-primary mb-0 d-flex align-items-center">
-                    <FaEye className="me-2" />
-                    LƯỢT XEM THEO THỜI GIAN
-                  </h5>
-                  <Form.Select
-                    value={timeRange}
-                    onChange={(e) => setTimeRange(e.target.value)}
-                    style={{ width: "auto", borderRadius: "8px" }}
-                    size="sm"
-                  >
-                    <option value="7days">7 ngày gần nhất</option>
-                    <option value="30days">30 ngày gần nhất</option>
-                    <option value="90days">90 ngày gần nhất</option>
-                  </Form.Select>
-                </div>
-              </Card.Header>
-              <Card.Body className="p-4">
-                <div style={{ height: "300px" }}>
-                  <Line data={viewsChartData} options={chartOptions} />
-                </div>
-              </Card.Body>
-            </Card>
+        {/* Views Chart */}
+        <div>
+          <h3 className="text-primary fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "1.25rem" }}>
+            <FaChartLine className="me-2" />
+            LƯỢT XEM
+          </h3>
+
+          <div className="d-flex flex-wrap align-items-center gap-3 mb-4">
+            <Form.Label className="fw-medium mb-0" style={{ fontSize: "1rem" }}>
+              Tất cả tin
+            </Form.Label>
+            <Form.Select className="rounded" style={{ fontSize: "0.9rem", padding: "0.5rem", maxWidth: "200px" }}>
+              <option>7 ngày gần nhất</option>
+              <option>30 ngày gần nhất</option>
+              <option>90 ngày gần nhất</option>
+            </Form.Select>
           </div>
 
-          {/* Room Type Distribution */}
-          <div className="col-12 col-lg-4">
-            <Card className="border-0 shadow-sm h-100" style={{ borderRadius: "16px" }}>
-              <Card.Header className="bg-transparent border-0 p-4 pb-0">
-                <h5 className="fw-bold text-primary mb-0">PHÂN BỐ LOẠI PHÒNG</h5>
-              </Card.Header>
-              <Card.Body className="p-4">
-                <div style={{ height: "300px" }}>
-                  <Doughnut data={roomTypeChartData} options={doughnutOptions} />
-                </div>
-              </Card.Body>
-            </Card>
-          </div>
-
-          {/* Performance Chart */}
-          <div className="col-12">
-            <Card className="border-0 shadow-sm" style={{ borderRadius: "16px" }}>
-              <Card.Header className="bg-transparent border-0 p-4 pb-0">
-                <h5>
-                  <PiTrendUpBold className="me-2" />
-                  HIỆU SUẤT TƯƠNG TÁC
-                </h5>
-              </Card.Header>
-              <Card.Body className="p-4">
-                <div style={{ height: "300px" }}>
-                  <Bar data={performanceChartData} options={chartOptions} />
-                </div>
-              </Card.Body>
-            </Card>
-          </div>
+          <Card className="border-0 shadow-sm" style={{ borderRadius: "16px", overflow: "hidden" }}>
+            <Card.Body className="p-3">
+              <div style={{ height: "300px" }}>
+                <Line data={chartData} options={chartOptions} />
+              </div>
+            </Card.Body>
+          </Card>
         </div>
       </div>
     </SidebarLayout>
