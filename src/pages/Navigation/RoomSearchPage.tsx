@@ -58,15 +58,15 @@ interface PaginationInfo {
   size: number
 }
 
-const priceLabelMap: Record<string, string> = {
-  all: "Tất cả mức giá",
-  "under-1m": "Dưới 1 triệu",
-  "1-10m": "1 - 10 triệu",
-  "10-30m": "10 - 30 triệu",
-  "30-50m": "30 - 50 triệu",
-  "50m-plus": "Trên 50 triệu",
-  "100m-plus": "Trên 100 triệu",
-}
+// const priceLabelMap: Record<string, string> = {
+//   all: "Tất cả mức giá",
+//   "under-1m": "Dưới 1 triệu",
+//   "1-10m": "1 - 10 triệu",
+//   "10-30m": "10 - 30 triệu",
+//   "30-50m": "30 - 50 triệu",
+//   "50m-plus": "Trên 50 triệu",
+//   "100m-plus": "Trên 100 triệu",
+// }
 
 const sortOptions = [
   { value: "createdAt,desc", label: "Mới nhất", icon: FaClock },

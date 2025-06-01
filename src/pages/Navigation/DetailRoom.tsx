@@ -41,204 +41,147 @@ export default function DetailRoom() {
   const navigate = useNavigate()
   const { id } = useParams<{ id: string }>()
   const [room, setRoom] = useState<RoomGetByID | null>(null)
-  const [loading, setLoading] = useState<boolean>(true)
-  const [isFavorite, setIsFavorite] = useState<boolean>(false)
+  const [loading, setLoading] = useState(true)
+  const [isFavorite, setIsFavorite] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [showPhone, setShowPhone] = useState<boolean>(false)
+  const [showPhone, setShowPhone] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [longitude, setLongitude] = useState(0)
   const [latitude, setLatitude] = useState(0)
-  const [address, setAddress] = useState<string | "">("")
+  const [address, setAddress] = useState("")
   const [similarRoomsError, setSimilarRoomsError] = useState<string | null>(null)
-  const maxRetries = 3
-
-  // State cho modal đánh giá
-  const [showReviewModal, setShowReviewModal] = useState<boolean>(false)
-  const [rating, setRating] = useState<number>(0)
-  const [comment, setComment] = useState<string>("")
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [rating, setRating] = useState(0)
+  const [comment, setComment] = useState("")
   const [images, setImages] = useState<File[]>([])
-
-  // State cho modal thông báo thành công
-  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false)
-
-  // State để lưu userId
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [userId, setUserId] = useState<number | null>(null)
-
   const [showLoginModal, setShowLoginModal] = useState(false)
-  const [similarRoomsLoading, setSimilarRoomsLoading] = useState<boolean>(true)
+  const [similarRoomsLoading, setSimilarRoomsLoading] = useState(true)
   const [similarRooms, setSimilarRooms] = useState<any[]>([])
 
-  // Fetch room details by ID with retry
   useEffect(() => {
     const fetchRoomDetails = async () => {
       setLoading(true)
       setError(null)
-
       try {
         if (!id) return
         const roomId = Number.parseInt(id)
-
         const roomResponse = await retryApiCall(() => roomApi.getRoomById(roomId), 3, 1000)
-
         const roomData = roomResponse.data.data
         setRoom(roomData)
-
         if (roomData.address) {
           const addressString =
             typeof roomData.address === "object"
               ? `${roomData.address.street || ""}, ${roomData.address.ward || ""}, ${roomData.address.district || ""}, ${roomData.address.province || ""}`
               : roomData.address
-
           try {
             const geoResponse = await addressAPI.getMapForward(addressString)
             const geoData = geoResponse.data.data
-
-            if (geoData) {
-              let coordinates
-
-              if (Array.isArray(geoData) && geoData.length > 0) {
-                coordinates = geoData[0]
-              } else if (typeof geoData === "object") {
-                coordinates = geoData
-              }
-
-              if (coordinates && "lat" in coordinates && "lon" in coordinates) {
-                setLatitude(coordinates.lat)
-                setLongitude(coordinates.lon)
-                setAddress(addressString)
-              }
+            let coordinates
+            if (Array.isArray(geoData) && geoData.length > 0) {
+              coordinates = geoData[0]
+            } else if (typeof geoData === "object") {
+              coordinates = geoData
             }
-          } catch (error) {
-            console.log("Backend geocoding failed, trying fallback...")
-
+            if (coordinates && "lat" in coordinates && "lon" in coordinates) {
+              setLatitude(coordinates.lat)
+              setLongitude(coordinates.lon)
+              setAddress(addressString)
+            }
+          } catch {
             try {
               const fallbackResult = await fallbackGeocode(addressString)
-
               if (fallbackResult) {
                 setLatitude(fallbackResult.lat)
                 setLongitude(fallbackResult.lon)
                 setAddress(addressString)
-                console.log("Using fallback geocoding result")
               } else {
                 const cityName = roomData.address.province || "Đà Nẵng"
                 const defaultCoords = getDefaultCoordinates(cityName)
                 setLatitude(defaultCoords.lat)
                 setLongitude(defaultCoords.lon)
-                console.log("Using default city coordinates")
               }
-            } catch (fallbackError) {
-              console.error("All geocoding methods failed:", fallbackError)
+            } catch {
               setLatitude(16.0544)
               setLongitude(108.2022)
             }
           }
         } else {
-          console.log("No address data available, using default coordinates")
           setLatitude(16.0544)
           setLongitude(108.2022)
           setAddress("Địa chỉ không xác định")
         }
-      } catch (error) {
-        console.error("Error fetching room details:", error)
+      } catch {
         setError("Không thể tải thông tin phòng. Vui lòng thử lại sau.")
       } finally {
         setLoading(false)
         window.scrollTo({ top: 0, behavior: "smooth" })
       }
     }
-
     fetchRoomDetails()
   }, [id])
 
   useEffect(() => {
     if (!room) return
-
     const fetchSimilarRooms = async () => {
       setSimilarRoomsLoading(true)
       setSimilarRoomsError(null)
-
       try {
-        console.log("Attempt 1: Loading similar rooms data...")
         const roomId = room.id
-
         const similarRoomsData = await retryApiCall(() => roomApi.aiGetSimilarRoom(roomId), 3, 1000)
-
         if (similarRoomsData?.data?.data) {
           setSimilarRooms(similarRoomsData.data.data)
-          console.log("Successfully loaded similar rooms")
         }
-      } catch (error) {
-        console.error("Error fetching similar rooms:", error)
+      } catch {
         setSimilarRoomsError("Không thể tải danh sách phòng tương tự. Vui lòng thử lại sau.")
       } finally {
         setSimilarRoomsLoading(false)
       }
     }
-
     fetchSimilarRooms()
   }, [room])
 
-  // Fetch user profile to get userId
   useEffect(() => {
     const fetchUserProfile = async () => {
       const accessToken = localStorage.getItem("accessToken")
-      if (!accessToken) {
-        console.log("No access token found, user not logged in.")
-        return
-      }
-
+      if (!accessToken) return
       try {
         const response = await userApi.getProfile()
         if (response.data.success) {
           setUserId(response.data.data.id)
         } else {
-          throw new Error(response.data.message || "Lỗi khi lấy thông tin người dùng")
+          throw new Error()
         }
-      } catch (error: any) {
-        console.error("Error fetching user profile:", error)
-        toast.error("Không thể lấy thông tin người dùng. Vui lòng thử lại.")
-      }
+      } catch {}
     }
-
     fetchUserProfile()
   }, [])
 
   useEffect(() => {
     const checkFavoriteStatus = async () => {
       if (!room) return
-
       const accessToken = localStorage.getItem("accessToken")
       if (!accessToken) return
-
       try {
         const response = await roomApi.getSavedRoomIds()
-        console.log("Saved rooms response:", response.data)
-
         if (response.data?.data?.roomIds) {
-          const isSaved = response.data.data.roomIds.includes(room.id)
-          console.log(`Room ${room.id} saved status:`, isSaved)
-          setIsFavorite(isSaved)
+          setIsFavorite(response.data.data.roomIds.includes(room.id))
         }
-      } catch (error) {
-        console.error("Error checking favorite status:", error)
-      }
+      } catch {}
     }
-
     checkFavoriteStatus()
   }, [room])
 
   const handleToggleFavorite = async () => {
     if (!room) return
-
     const isLoggedIn = localStorage.getItem("accessToken")
     if (!isLoggedIn) {
       localStorage.setItem("pendingAction", "save-room")
       localStorage.setItem("pendingRoomId", room.id.toString())
-
       setShowLoginModal(true)
       return
     }
-
     try {
       if (!isFavorite) {
         await roomApi.addToWishList(room.id)
@@ -248,15 +191,12 @@ export default function DetailRoom() {
         toast.success("Đã xóa tin khỏi danh sách yêu thích")
       }
       setIsFavorite(!isFavorite)
-    } catch (error) {
-      console.error("Error updating wishlist:", error)
+    } catch {
       toast.error("Có lỗi xảy ra. Vui lòng thử lại sau.")
     }
   }
 
-  const handleLoginModalClose = () => {
-    setShowLoginModal(false)
-  }
+  const handleLoginModalClose = () => setShowLoginModal(false)
 
   const handleShare = () => {
     if (navigator.share) {
@@ -266,7 +206,7 @@ export default function DetailRoom() {
           text: `Xem phòng trọ: ${room?.title}`,
           url: window.location.href,
         })
-        .catch((error) => console.log("Error sharing", error))
+        .catch(() => {})
     } else {
       navigator.clipboard
         .writeText(window.location.href)
@@ -275,29 +215,19 @@ export default function DetailRoom() {
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files)
-      setImages(files)
-    }
-  }
-
   const handleSubmitReview = async () => {
     if (!room) return
-
     const accessToken = localStorage.getItem("accessToken")
     if (!accessToken) {
       toast.info("Vui lòng đăng nhập để gửi đánh giá")
       setShowReviewModal(false)
       return
     }
-
     if (!userId) {
       toast.error("Không thể xác định thông tin người dùng. Vui lòng thử lại.")
       setShowReviewModal(false)
       return
     }
-
     if (rating < 1 || rating > 5) {
       toast.error("Vui lòng chọn điểm số từ 1 đến 5")
       return
@@ -306,13 +236,11 @@ export default function DetailRoom() {
       toast.error("Vui lòng nhập bình luận")
       return
     }
-
     try {
       const uploadedImages: RoomImage[] = images.map((file, index) => ({
         publicId: `local-${index}-${file.name}`,
         imageUrl: URL.createObjectURL(file),
       }))
-
       const reviewData = {
         roomId: room.id,
         userId: userId,
@@ -320,7 +248,6 @@ export default function DetailRoom() {
         comment: comment,
         images: uploadedImages,
       }
-
       const response = await reviewAPI.createReview(reviewData)
       if (response.data.success) {
         setShowReviewModal(false)
@@ -329,11 +256,10 @@ export default function DetailRoom() {
         setComment("")
         setImages([])
       } else {
-        throw new Error(response.data.message || "Lỗi khi gửi đánh giá")
+        throw new Error()
       }
-    } catch (error: any) {
-      console.error("Error submitting review:", error)
-      toast.error(error.message || "Có lỗi xảy ra. Vui lòng thử lại sau.")
+    } catch {
+      toast.error("Có lỗi xảy ra. Vui lòng thử lại sau.")
     }
   }
 
@@ -347,10 +273,7 @@ export default function DetailRoom() {
 
   if (loading) {
     return (
-      <div
-        className="d-flex justify-content-center align-items-center min-vh-100"
-        style={{ backgroundColor: "#f8f9fa" }}
-      >
+      <div className="d-flex justify-content-center align-items-center min-vh-100" style={{ backgroundColor: "#f8f9fa" }}>
         <div className="text-center">
           <Spinner animation="border" style={{ width: "3rem", height: "3rem", color: "#0046a8" }} />
           <div className="mt-3 text-muted fw-medium">Đang tải thông tin phòng...</div>
@@ -406,11 +329,9 @@ export default function DetailRoom() {
             <span className="fw-medium">Quay lại</span>
           </Button>
         </div>
-
         <Row className="g-4">
-          {/* Main Content */}
           <Col lg={8}>
-            {/* Breadcrumb - Hidden on mobile */}
+            {/* Breadcrumb */}
             <nav aria-label="breadcrumb" className="mb-4 d-none d-md-block">
               <ol className="breadcrumb bg-white rounded-4 shadow-sm px-4 py-3 mb-0">
                 <li className="breadcrumb-item">
@@ -434,15 +355,15 @@ export default function DetailRoom() {
                       room.roomType === "BOARDING_HOUSE"
                         ? "nha-tro-phong-tro"
                         : room.roomType === "WHOLE_HOUSE"
-                          ? "nha-nguyen-can"
-                          : "can-ho"
+                        ? "nha-nguyen-can"
+                        : "can-ho"
                     }`}
                   >
                     {room.roomType === "BOARDING_HOUSE"
                       ? "Phòng trọ"
                       : room.roomType === "WHOLE_HOUSE"
-                        ? "Nhà nguyên căn"
-                        : "Căn hộ"}
+                      ? "Nhà nguyên căn"
+                      : "Căn hộ"}
                   </Link>
                 </li>
                 <li className="breadcrumb-item active text-muted" aria-current="page">
@@ -450,7 +371,6 @@ export default function DetailRoom() {
                 </li>
               </ol>
             </nav>
-
             {/* Room Title Section */}
             <Card className="border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
               <Card.Body className="p-4">
@@ -475,11 +395,10 @@ export default function DetailRoom() {
                     {room.roomType === "BOARDING_HOUSE"
                       ? "Phòng trọ"
                       : room.roomType === "WHOLE_HOUSE"
-                        ? "Nhà nguyên căn"
-                        : "Căn hộ"}
+                      ? "Nhà nguyên căn"
+                      : "Căn hộ"}
                   </Badge>
                 </div>
-
                 {/* Quick Stats */}
                 <Row className="g-3">
                   <Col xs={6} md={3}>
@@ -523,13 +442,12 @@ export default function DetailRoom() {
                 </Row>
               </Card.Body>
             </Card>
-
             {/* Image Carousel */}
             <Card className="border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
               <div className="position-relative">
                 <Carousel
                   activeIndex={activeIndex}
-                  onSelect={(selectedIndex) => setActiveIndex(selectedIndex)}
+                  onSelect={setActiveIndex}
                   interval={null}
                   className="room-carousel"
                   indicators={false}
@@ -558,7 +476,6 @@ export default function DetailRoom() {
                     </Carousel.Item>
                   ))}
                 </Carousel>
-
                 {/* Thumbnail Navigation */}
                 <div className="p-3 bg-white">
                   <div className="d-flex gap-2 overflow-auto pb-2" style={{ scrollbarWidth: "thin" }}>
@@ -588,7 +505,6 @@ export default function DetailRoom() {
                 </div>
               </div>
             </Card>
-
             {/* Action Buttons */}
             <Card className="border-0 shadow-sm mb-4 rounded-4">
               <Card.Body className="p-3">
@@ -637,7 +553,6 @@ export default function DetailRoom() {
                 </Row>
               </Card.Body>
             </Card>
-
             {/* Room Description */}
             <Card className="border-0 shadow-sm mb-4 rounded-4">
               <Card.Header className="bg-white border-0 p-4 pb-0">
@@ -652,7 +567,6 @@ export default function DetailRoom() {
                 </p>
               </Card.Body>
             </Card>
-
             {/* Room Specifications */}
             <Card className="border-0 shadow-sm mb-4 rounded-4">
               <Card.Header className="bg-white border-0 p-4 pb-0">
@@ -718,7 +632,6 @@ export default function DetailRoom() {
                     </div>
                   </Col>
                 </Row>
-
                 <div className="mt-4 p-3 rounded-4" style={{ backgroundColor: "#f8f9fa" }}>
                   <Row>
                     <Col xs={6}>
@@ -741,7 +654,6 @@ export default function DetailRoom() {
                 </div>
               </Card.Body>
             </Card>
-
             {/* Amenities */}
             <Card className="border-0 shadow-sm mb-4 rounded-4">
               <Card.Header className="bg-white border-0 p-4 pb-0">
@@ -763,7 +675,6 @@ export default function DetailRoom() {
                 </Row>
               </Card.Body>
             </Card>
-
             {/* Target Audience */}
             <Card className="border-0 shadow-sm mb-4 rounded-4">
               <Card.Header className="bg-white border-0 p-4 pb-0">
@@ -785,7 +696,6 @@ export default function DetailRoom() {
                 </Row>
               </Card.Body>
             </Card>
-
             {/* Surrounding Environment */}
             <Card className="border-0 shadow-sm mb-4 rounded-4">
               <Card.Header className="bg-white border-0 p-4 pb-0">
@@ -807,7 +717,6 @@ export default function DetailRoom() {
                 </Row>
               </Card.Body>
             </Card>
-
             {/* Location Map */}
             <Card className="border-0 shadow-sm mb-4 rounded-4">
               <Card.Header className="bg-white border-0 pb-0 p-3">
@@ -834,10 +743,8 @@ export default function DetailRoom() {
               </Card.Body>
             </Card>
           </Col>
-
           {/* Sidebar */}
           <Col lg={4}>
-            {/* Contact Card */}
             <Card className="border-0 shadow-sm mb-4 rounded-4 sticky-top" style={{ top: "20px" }}>
               <Card.Header className="text-white border-0 p-4 rounded-top-4" style={{ backgroundColor: "#0046a8" }}>
                 <h5 className="mb-0 fw-bold">Thông tin liên hệ</h5>
@@ -862,7 +769,6 @@ export default function DetailRoom() {
                     </div>
                   </div>
                 </div>
-
                 <div className="d-grid gap-3">
                   <Button
                     size="lg"
@@ -877,7 +783,6 @@ export default function DetailRoom() {
                     <FaPhone className="me-2" />
                     {showPhone ? room.posterPhone : "Hiện số điện thoại"}
                   </Button>
-
                   <Button
                     variant={isFavorite ? "danger" : "outline-danger"}
                     size="lg"
@@ -888,7 +793,6 @@ export default function DetailRoom() {
                     {isFavorite ? <FaHeart className="me-2" /> : <FaRegHeart className="me-2" />}
                     {isFavorite ? "Đã lưu tin" : "Lưu tin này"}
                   </Button>
-
                   <Button
                     variant="outline-primary"
                     size="lg"
@@ -908,8 +812,7 @@ export default function DetailRoom() {
             </Card>
           </Col>
         </Row>
-
-        {/* Similar Rooms Section - Now Full Width and More Prominent */}
+        {/* Similar Rooms Section */}
         <Card className="border-0 shadow-sm rounded-4 mt-5">
           <Card.Header className="text-white border-0 p-4 rounded-top-4" style={{ backgroundColor: "#28a745" }}>
             <div className="d-flex justify-content-between align-items-center">
@@ -931,10 +834,7 @@ export default function DetailRoom() {
                 <Button
                   variant="primary"
                   className="rounded-pill px-4"
-                  onClick={() => {
-                    setSimilarRoomsError(null)
-                    // Retry logic here
-                  }}
+                  onClick={() => setSimilarRoomsError(null)}
                   style={{ backgroundColor: "#0046a8", borderColor: "#0046a8" }}
                 >
                   Thử lại
@@ -1008,7 +908,6 @@ export default function DetailRoom() {
                 <p className="text-muted small">Hệ thống đang tìm kiếm phòng phù hợp cho bạn</p>
               </div>
             )}
-
             {similarRooms.length > 0 && (
               <div className="text-center mt-4">
                 <Link
@@ -1016,8 +915,8 @@ export default function DetailRoom() {
                     room.roomType === "BOARDING_HOUSE"
                       ? "nha-tro-phong-tro"
                       : room.roomType === "WHOLE_HOUSE"
-                        ? "nha-nguyen-can"
-                        : "can-ho"
+                      ? "nha-nguyen-can"
+                      : "can-ho"
                   }`}
                   className="btn btn-outline-primary rounded-pill px-4 fw-medium"
                   style={{ borderColor: "#0046a8", color: "#0046a8" }}
@@ -1029,7 +928,6 @@ export default function DetailRoom() {
           </Card.Body>
         </Card>
       </Container>
-
       {/* Review Modal */}
       <Modal show={showReviewModal} onHide={() => setShowReviewModal(false)} centered>
         <Modal.Header closeButton className="border-0 pb-0">
@@ -1052,12 +950,10 @@ export default function DetailRoom() {
                     style={{ cursor: "pointer", transition: "color 0.2s" }}
                     onClick={() => setRating(star)}
                     onMouseEnter={(e: React.MouseEvent<SVGElement>) => {
-                      const target = e.currentTarget
-                      target.style.transform = "scale(1.1)"
+                      e.currentTarget.style.transform = "scale(1.1)"
                     }}
                     onMouseLeave={(e: React.MouseEvent<SVGElement>) => {
-                      const target = e.currentTarget
-                      target.style.transform = "scale(1)"
+                      e.currentTarget.style.transform = "scale(1)"
                     }}
                   />
                 ))}
@@ -1070,7 +966,6 @@ export default function DetailRoom() {
                 </div>
               )}
             </Form.Group>
-
             <Form.Group className="mb-3">
               <Form.Label className="fw-medium">Chia sẻ trải nghiệm của bạn</Form.Label>
               <Form.Control
@@ -1099,7 +994,6 @@ export default function DetailRoom() {
           </Button>
         </Modal.Footer>
       </Modal>
-
       {/* Success Modal */}
       <Modal show={showSuccessModal} onHide={() => setShowSuccessModal(false)} centered>
         <Modal.Body className="text-center p-5">
@@ -1117,19 +1011,15 @@ export default function DetailRoom() {
           </Button>
         </Modal.Body>
       </Modal>
-
       <LoginModal show={showLoginModal} handleClose={handleLoginModalClose} />
-
       <style>{`
         .hover-card:hover {
           transform: translateY(-5px);
           box-shadow: 0 8px 25px rgba(0, 70, 168, 0.15) !important;
         }
-        
         .cursor-pointer {
           cursor: pointer;
         }
-        
         @media (max-width: 768px) {
           .sticky-top {
             position: relative !important;

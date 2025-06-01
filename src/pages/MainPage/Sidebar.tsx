@@ -19,8 +19,8 @@ import {
 import PurchasePostModal from "../RoomPostPage/PurchaseSlot"
 import paymentAPI from "../../apis/payment.api"
 import { toast } from "react-toastify"
-import userApi from "../../apis/user.api"
-import { useAppSelector, useResponsive } from "../../store/hook"
+import { useAppDispatch, useAppSelector, useResponsive } from "../../store/hook"
+import { fetchWalletData } from "../../store/slices/paymentSlice"
 
 interface SidebarProps {
   show?: boolean
@@ -29,14 +29,27 @@ interface SidebarProps {
 }
 
 const AppSidebar = ({ show = true, onHide, variant = "fixed" }: SidebarProps) => {
+  const [total, setTotal] = useState<number>(0)
+  const dispatch = useAppDispatch()
   const { profile } = useAppSelector((state) => state.user)
-  const { isMobile } = useResponsive()
+  const { balance, loading: walletLoading } = useAppSelector((state) => state.payment.wallet)
   const navigate = useNavigate()
   const [showPurchaseModal, setShowPurchaseModal] = useState(false)
-  const [total, setTotal] = useState<number>(0)
-  const [slot, setSlot] = useState<number>(0)
   const [activePath, setActivePath] = useState<string>("")
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Initial data load - only happens once after login
+  useEffect(() => {
+    if (profile?.id && !balance) {
+      dispatch(fetchWalletData(profile.id))
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }, [profile?.id, dispatch, balance])
+
+  // Track current path for highlighting the active menu item
+  useEffect(() => {
+    setActivePath(window.location.pathname)
+  }, [])
 
   useEffect(() => {
     const userId = profile?.id
@@ -46,12 +59,10 @@ const AppSidebar = ({ show = true, onHide, variant = "fixed" }: SidebarProps) =>
       const getTotal = async () => {
         try {
           setIsLoading(true)
-          const [walletResponse, profileResponse] = await Promise.all([
+          const [walletResponse] = await Promise.all([
             paymentAPI.getWallet(userId),
-            userApi.getProfile(),
           ])
           setTotal(walletResponse.data.data.balance)
-          setSlot(profileResponse.data.data.numberOfPosts)
         } catch (error) {
           toast.error("Lỗi khi lấy thông tin ví")
         } finally {
@@ -61,11 +72,6 @@ const AppSidebar = ({ show = true, onHide, variant = "fixed" }: SidebarProps) =>
       getTotal()
     }
   }, [profile?.id])
-
-  useEffect(() => {
-    const currentPath = window.location.pathname
-    setActivePath(currentPath)
-  }, [])
 
   const sidebarItems = [
     {
@@ -177,7 +183,9 @@ const AppSidebar = ({ show = true, onHide, variant = "fixed" }: SidebarProps) =>
                 <span className="text-muted" style={{ fontSize: "0.875rem" }}>
                   TK chính:
                 </span>
-                <span className="fw-semibold text-success">{isLoading ? "..." : formatVND(total)}</span>
+                <span className="fw-semibold text-success">
+                  {walletLoading ? "..." : formatVND(balance)}
+                </span>
               </div>
               <div className="d-flex justify-content-between align-items-center mb-2">
                 <span className="text-muted" style={{ fontSize: "0.875rem" }}>
@@ -189,7 +197,9 @@ const AppSidebar = ({ show = true, onHide, variant = "fixed" }: SidebarProps) =>
                 <span className="text-muted" style={{ fontSize: "0.875rem" }}>
                   Số lượng tin:
                 </span>
-                <span className="fw-semibold text-primary">{isLoading ? "..." : slot}</span>
+                <span className="fw-semibold text-primary">
+                  {walletLoading ? "..." : profile?.numberOfPosts || 0}
+                </span>
               </div>
             </div>
           </div>
