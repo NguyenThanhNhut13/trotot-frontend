@@ -232,8 +232,17 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.accessToken = null;
         state.refreshToken = null;
-      });
-  },
+      })
+      .addCase(refreshTokenFromServer.fulfilled, (state, action) => {
+        state.isAuthenticated = true;
+      })
+      .addCase(refreshTokenFromServer.rejected, (state, action) => {
+        state.isAuthenticated = false;
+        state.accessToken = null;
+        state.refreshToken = null;
+        state.error = action.payload as string;
+      })
+    }
 });
 
 export const { setCredentials, resetAuth } = authSlice.actions;

@@ -8,7 +8,7 @@ import RegisterModal from "../../pages/Register/RegisterModal"
 import { FaBell, FaHeart, FaBars, FaUser, FaHome, FaVideo, FaBlog, FaPhone, FaTimes } from "react-icons/fa"
 import { toast } from "react-toastify"
 import { useAppSelector, useAppDispatch, useResponsive } from "../../store/hook"
-import { checkAndRefreshToken, logout } from "../../store/slices/authSlice"
+import { checkAndRefreshToken, logout, refreshTokenFromServer } from "../../store/slices/authSlice"
 import { upgradeUserRole } from "../../store/slices/userSlice"
 
 const Header = () => {
@@ -74,29 +74,21 @@ const Header = () => {
       
       // Check if the upgrade was successful
       if (upgradeUserRole.fulfilled.match(resultAction)) {
-        // Explicitly refresh the token to get the updated role
-        const tokenResult = await dispatch(checkAndRefreshToken()).unwrap()
+        // You may need to create this action if it doesn't exist
+        await dispatch(refreshTokenFromServer()).unwrap()
         
-        // Check if token refresh was successful
-        if (tokenResult) {
-          // Force decode the token again to verify the role update
-          const newAccessToken = localStorage.getItem("accessToken")
-          if (newAccessToken) {
-            const newPayload = JSON.parse(atob(newAccessToken.split(".")[1]))
-            let newRoles: string[] = []
+        // Verify the new role is in the token
+        const newAccessToken = localStorage.getItem("accessToken")
+        if (newAccessToken) {
+          const newPayload = JSON.parse(atob(newAccessToken.split(".")[1]))
+          let newRoles = Array.isArray(newPayload.roles) 
+            ? newPayload.roles 
+            : newPayload.roles.split(",").map((r: string) => r.trim())
             
-            if (typeof newPayload.roles === "string") {
-              newRoles = newPayload.roles.split(",").map((r: string) => r.trim())
-            } else if (Array.isArray(newPayload.roles)) {
-              newRoles = newPayload.roles
-            }
-            
-            // Verify the role is actually updated
-            if (!newRoles.includes("LANDLORD")) {
-              // Token not properly updated, wait briefly and try once more
-              await new Promise(resolve => setTimeout(resolve, 1000))
-              await dispatch(checkAndRefreshToken()).unwrap()
-            }
+          // If role not updated yet, try one more time after a brief delay
+          if (!newRoles.includes("LANDLORD")) {
+            await new Promise(resolve => setTimeout(resolve, 1000))
+            await dispatch(refreshTokenFromServer()).unwrap()
           }
         }
         

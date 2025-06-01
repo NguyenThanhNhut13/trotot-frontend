@@ -7,7 +7,6 @@ import {
   getAccessTokenFromLS,
   getRefreshTokenFromLS,
   setAccessTokenToLS,
-  setProfileToLS,
   setRefreshTokenToLS,
 } from "./auth";
 import config from "../constants/config";
@@ -18,151 +17,123 @@ import {
   URL_REGISTER,
   URL_VERIFY_OTP,
 } from "../apis/auth.api";
-import { URL_GET_PROFILE } from "../apis/user.api";
 import { isAxiosExpiredTokenError, isAxiosUnauthorizedError } from "./utils";
 import { ErrorResponse } from "../types/utils.type";
-import { UserRespone } from "../types/user.type";
-
-// Post: 1 - 3
-// Me: 2 - 5
-// Refresh Token cho Post: 3 -  4
-// Gọi lại Post: 4 - 6
-// Refresh Token mới cho me: 5 - 6
-// Gọi lại Me: 6
 
 export class Http {
   instance: AxiosInstance;
   private accessToken: string;
   private refreshToken: string;
   private refreshTokenRequest: Promise<string> | null;
+
   constructor() {
     this.accessToken = getAccessTokenFromLS();
     this.refreshToken = getRefreshTokenFromLS();
     this.refreshTokenRequest = null;
+
     this.instance = axios.create({
       baseURL: config.baseUrl,
       timeout: 60000,
       headers: {
         "Content-Type": "application/json",
-        "expire-access-token": 60 * 60 * 24, // 1 ngày
-        "expire-refresh-token": 60 * 60 * 24 * 160, // 160 ngày
+        "expire-access-token": 60 * 60 * 24, // 1 day
+        "expire-refresh-token": 60 * 60 * 24 * 160, // 160 days
       },
     });
+
+    this.setupInterceptors();
+  }
+
+  private setupInterceptors() {
+    // Request interceptor
     this.instance.interceptors.request.use(
       (config) => {
         if (this.accessToken && config.headers) {
-          config.headers.Authorization = `Bearer ${getAccessTokenFromLS()}`;
-
-          return config;
+          config.headers.Authorization = `Bearer ${this.accessToken}`;
         }
         return config;
       },
-      (error) => {
-        return Promise.reject(error);
-      }
+      (error) => Promise.reject(error)
     );
-    // Add a response interceptor
+
+    // Response interceptor
     this.instance.interceptors.response.use(
-      (response) => {
-        const { url } = response.config;
-        if (url === URL_LOGIN) {
-          const data = response.data as AuthResponse;
-          this.accessToken = data.data.accessToken;
-          this.refreshToken = data.data.refreshToken;
-          setAccessTokenToLS(this.accessToken);
-          setRefreshTokenToLS(this.refreshToken);
-        } else if (
-          url === URL_LOGOUT ||
-          url === URL_REGISTER ||
-          url === URL_VERIFY_OTP
-        ) {
-          this.accessToken = "";
-          this.refreshToken = "";
-          clearLS();
-        } else if (url === URL_GET_PROFILE) {
-          const data = response.data as UserRespone;
-          setProfileToLS(data.data);
-        }
-        return response;
-      },
-      (error: AxiosError) => {
-        // Chỉ toast lỗi không phải 422 và 401
-        if (
-          ![
-            HttpStatusCode.UnprocessableEntity,
-            HttpStatusCode.Unauthorized,
-          ].includes(error.response?.status as number)
-        ) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const data: any | undefined = error.response?.data;
-          const message = data?.message || error.message;
-          toast.error(message);
-        }
-
-        // Lỗi Unauthorized (401) có rất nhiều trường hợp
-        // - Token không đúng
-        // - Không truyền token
-        // - Token hết hạn*
-
-        // Nếu là lỗi 401
-        if (
-          isAxiosUnauthorizedError<
-            ErrorResponse<{ name: string; message: string }>
-          >(error)
-        ) {
-          const config = error.response?.config || { headers: {}, url: "" };
-          const { url } = config;
-          // Thêm điều kiện url !== URL_LOGIN để tránh vòng lặp với login request
-          if (isAxiosExpiredTokenError(error) && url !== URL_REFRESH_TOKEN && url !== URL_LOGIN) {
-            // Hạn chế gọi 2 lần handleRefreshToken
-            this.refreshTokenRequest = this.refreshTokenRequest
-              ? this.refreshTokenRequest
-              : this.handleRefreshToken().finally(() => {
-                  // Giữ refreshTokenRequest trong 10s cho những request tiếp theo nếu có 401 thì dùng
-                  setTimeout(() => {
-                    this.refreshTokenRequest = null;
-                  }, 10000);
-                });
-            return this.refreshTokenRequest.then((accessToken) => {
-              // Nghĩa là chúng ta tiếp tục gọi lại request cũ vừa bị lỗi
-              return this.instance({
-                ...config,
-                headers: {
-                  ...config.headers,
-                  authorization: `Bearer ${accessToken}`,
-                },
-              });
-            });
-          }
-
-          // Nếu là URL_LOGIN và bị 401, không làm gì cả (không refresh token)
-          if (url === URL_LOGIN) {
-            // Chỉ hiển thị lỗi, không làm gì thêm
-            return Promise.reject(error);
-          }
-
-          // Còn những trường hợp như token không đúng
-          // không truyền token,
-          // token hết hạn nhưng gọi refresh token bị fail
-          // thì tiến hành xóa local storage và toast message
-
-          // clearLS();
-          // this.accessToken = "";
-          // this.refreshToken = "";
-          toast.error(
-            (error as AxiosError<ErrorResponse<{ message: string }>>).response
-              ?.data.data?.message ||
-              (error as AxiosError<ErrorResponse<{ message: string }>>).response
-                ?.data.message
-          );
-          // window.location.reload()
-        }
-        return Promise.reject(error);
-      }
+      this.handleResponse.bind(this),
+      this.handleError.bind(this)
     );
   }
+
+  private handleResponse(response: any) {
+    const { url } = response.config;
+    
+    if (url === URL_LOGIN) {
+      const data = response.data as AuthResponse;
+      this.accessToken = data.data.accessToken;
+      this.refreshToken = data.data.refreshToken;
+      setAccessTokenToLS(this.accessToken);
+      setRefreshTokenToLS(this.refreshToken);
+    } else if ([URL_LOGOUT, URL_REGISTER, URL_VERIFY_OTP].includes(url)) {
+      this.accessToken = "";
+      this.refreshToken = "";
+      clearLS();
+    }
+    
+    return response;
+  }
+
+  private handleError(error: AxiosError) {
+    // Handle general error messages
+    if (![HttpStatusCode.UnprocessableEntity, HttpStatusCode.Unauthorized].includes(
+      error.response?.status as number
+    )) {
+      const message =
+        (error.response?.data as { message?: string })?.message || error.message;
+      toast.error(message);
+    }
+
+    // Handle unauthorized errors
+    if (isAxiosUnauthorizedError<ErrorResponse<{ name: string; message: string }>>(error)) {
+      const config = error.response?.config || { headers: {}, url: "" };
+      const { url } = config;
+
+      // Handle expired token
+      if (isAxiosExpiredTokenError(error) && url !== URL_REFRESH_TOKEN && url !== URL_LOGIN) {
+        return this.handleTokenRefresh(config);
+      }
+
+      // Skip error toast for login failures
+      if (url !== URL_LOGIN) {
+        const errorMessage = error.response?.data?.data?.message || error.response?.data?.message;
+        toast.error(errorMessage);
+      }
+    }
+    
+    return Promise.reject(error);
+  }
+
+  private handleTokenRefresh(config: any) {
+    // Create or reuse the refresh token request
+    if (!this.refreshTokenRequest) {
+      this.refreshTokenRequest = this.handleRefreshToken().finally(() => {
+        setTimeout(() => {
+          this.refreshTokenRequest = null;
+        }, 10000);
+      });
+    }
+
+    // Retry original request with new token
+    return this.refreshTokenRequest.then((accessToken) => {
+      return this.instance({
+        ...config,
+        headers: {
+          ...config.headers,
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+    });
+  }
+
   private handleRefreshToken() {
-    console.log("refresh token");
     return this.instance
       .post<RefreshTokenReponse>(URL_REFRESH_TOKEN, {
         refreshToken: this.refreshToken,
@@ -170,19 +141,14 @@ export class Http {
       })
       .then((res) => {
         const { accessToken, refreshToken } = res.data.data;
-        setAccessTokenToLS(accessToken);
-        setRefreshTokenToLS(refreshToken);
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
+        setAccessTokenToLS(accessToken);
+        setRefreshTokenToLS(refreshToken);
         return accessToken;
-      })
-      .catch((error) => {
-        // clearLS();
-        // this.accessToken = "";
-        // this.refreshToken = "";
-        throw error;
       });
   }
 }
+
 const http = new Http().instance;
 export default http;
