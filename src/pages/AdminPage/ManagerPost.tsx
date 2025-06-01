@@ -20,6 +20,7 @@ import {
   FaCheckCircle,
   FaTimesCircle,
   FaExclamationTriangle,
+  FaFilter,
 } from "react-icons/fa"
 import type { Room } from "../../types/room.type"
 import { useAppSelector, useResponsive } from "../../store/hook"
@@ -191,8 +192,12 @@ export default function ManagerPost() {
     const IconComponent = config.icon
 
     return (
-      <Badge bg={config.variant} className="d-flex align-items-center gap-1">
-        <IconComponent size={12} />
+      <Badge
+        bg={config.variant}
+        className="d-flex align-items-center gap-1 py-2 px-2"
+        style={{ fontSize: "0.75rem", fontWeight: 500 }}
+      >
+        <IconComponent size={10} className="me-1" />
         {config.label}
       </Badge>
     )
@@ -244,7 +249,7 @@ export default function ManagerPost() {
     <SidebarLayout>
       <div className="d-flex flex-column gap-4">
         {/* Header */}
-        <div className="d-flex justify-content-between align-items-center">
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
           <div>
             <h2 className="text-primary fw-bold mb-1 d-flex align-items-center">
               <FaChartLine className="me-2" />
@@ -260,6 +265,7 @@ export default function ManagerPost() {
               background: "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)",
               border: "none",
               borderRadius: "12px",
+              boxShadow: "0 4px 10px rgba(0, 70, 168, 0.2)",
             }}
           >
             <FaPlus className="me-2" />
@@ -328,28 +334,44 @@ export default function ManagerPost() {
               </div>
 
               <div className="col-6 col-md-3 col-lg-2">
-                <Form.Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  style={{ borderRadius: "8px" }}
-                >
-                  <option value="all">Tất cả trạng thái</option>
-                  <option value="active">Đang hoạt động</option>
-                  <option value="pending">Chờ duyệt</option>
-                  <option value="rejected">Bị từ chối</option>
-                  <option value="expired">Hết hạn</option>
-                </Form.Select>
+                <InputGroup>
+                  <InputGroup.Text className="bg-light border-end-0">
+                    <FaFilter className="text-muted" size={12} />
+                  </InputGroup.Text>
+                  <Form.Select
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                    className="border-start-0"
+                    style={{ borderRadius: "0 8px 8px 0" }}
+                  >
+                    <option value="all">Tất cả trạng thái</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="pending">Chờ duyệt</option>
+                    <option value="rejected">Bị từ chối</option>
+                    <option value="expired">Hết hạn</option>
+                  </Form.Select>
+                </InputGroup>
               </div>
 
               <div className="col-6 col-md-3 col-lg-2">
-                <Form.Select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ borderRadius: "8px" }}>
-                  <option value="newest">Mới nhất</option>
-                  <option value="oldest">Cũ nhất</option>
-                  <option value="price-high">Giá cao → thấp</option>
-                  <option value="price-low">Giá thấp → cao</option>
-                  <option value="area-large">Diện tích lớn → nhỏ</option>
-                  <option value="area-small">Diện tích nhỏ → lớn</option>
-                </Form.Select>
+                <InputGroup>
+                  <InputGroup.Text className="bg-light border-end-0">
+                    <FaSort className="text-muted" size={12} />
+                  </InputGroup.Text>
+                  <Form.Select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="border-start-0"
+                    style={{ borderRadius: "0 8px 8px 0" }}
+                  >
+                    <option value="newest">Mới nhất</option>
+                    <option value="oldest">Cũ nhất</option>
+                    <option value="price-high">Giá cao → thấp</option>
+                    <option value="price-low">Giá thấp → cao</option>
+                    <option value="area-large">Diện tích lớn → nhỏ</option>
+                    <option value="area-small">Diện tích nhỏ → lớn</option>
+                  </Form.Select>
+                </InputGroup>
               </div>
             </div>
           </Card.Body>
@@ -371,7 +393,7 @@ export default function ManagerPost() {
         </div>
 
         {/* Room Listings */}
-        <Card className="border-0 shadow-sm" style={{ borderRadius: "16px" }}>
+        <Card className="border-0 shadow-sm" style={{ borderRadius: "16px", overflow: "hidden" }}>
           {filteredRooms.length === 0 ? (
             <Card.Body className="text-center py-5">
               <FaHome size={48} className="text-muted mb-3" />
@@ -394,7 +416,7 @@ export default function ManagerPost() {
             </Card.Body>
           ) : (
             <div className="table-responsive">
-              <Table hover className="mb-0">
+              <Table hover className="mb-0 align-middle">
                 <thead style={{ backgroundColor: "#f8f9fa" }}>
                   <tr>
                     <th className="border-0 py-3 text-center" style={{ width: "60px" }}>
@@ -413,24 +435,44 @@ export default function ManagerPost() {
                 </thead>
                 <tbody>
                   {filteredRooms.map((room, index) => (
-                    <tr key={room.id} style={{ borderBottom: "1px solid #f1f3f4" }}>
+                    <tr
+                      key={room.id}
+                      style={{
+                        borderBottom: "1px solid #f1f3f4",
+                        transition: "background-color 0.2s",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = "#f8f9fa"
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = "transparent"
+                      }}
+                    >
                       <td className="py-3 text-center text-muted">{index + 1}</td>
                       <td className="py-3">
                         <div className="d-flex align-items-center">
                           <div
-                            className="me-3 rounded-3 bg-light d-flex align-items-center justify-content-center"
+                            className="me-3 rounded-3 bg-light d-flex align-items-center justify-content-center overflow-hidden"
                             style={{
                               width: isMobile ? 40 : 50,
                               height: isMobile ? 40 : 50,
-                              backgroundImage: room.images?.[0]?.imageUrl
-                                ? `url(${room.images[0].imageUrl})`
-                                : undefined,
-                              backgroundSize: "cover",
-                              backgroundPosition: "center",
                               flexShrink: 0,
+                              border: "1px solid #e9ecef",
                             }}
                           >
-                            {!room.images?.[0]?.imageUrl && <FaHome className="text-secondary" size={20} />}
+                            {room.images?.[0]?.imageUrl ? (
+                              <img
+                                src={room.images[0].imageUrl || "/placeholder.svg"}
+                                alt={room.title}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                              />
+                            ) : (
+                              <FaHome className="text-secondary" size={20} />
+                            )}
                           </div>
                           <div style={{ minWidth: 0 }}>
                             <div
@@ -463,7 +505,12 @@ export default function ManagerPost() {
                           </td>
                           <td className="py-3">{room.area} m²</td>
                           <td className="py-3">
-                            <Badge bg="light" text="dark" className="border">
+                            <Badge
+                              bg="light"
+                              text="dark"
+                              className="border py-2 px-2"
+                              style={{ fontSize: "0.75rem", fontWeight: 500 }}
+                            >
                               {getRoomTypeLabel(room.roomType)}
                             </Badge>
                           </td>
