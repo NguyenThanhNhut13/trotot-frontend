@@ -1,7 +1,10 @@
-import React, { useRef, useEffect } from "react";
-import { Row, Col, Button, Container } from "react-bootstrap";
+import React, { useEffect, useRef, useState } from "react";
+import { Container, Row, Col, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../MainPage/Sidebar";
+import { toast } from "react-toastify";
+import { useAppSelector } from "../../store/hook";
+import PurchaseSlot from "./PurchaseSlot"; 
 import "../../assets/styles/PostRoom.css";
 
 interface RoomType {
@@ -14,6 +17,8 @@ interface RoomType {
 const PostRoomPage = () => {
   const navigate = useNavigate();
   const contentRef = useRef<HTMLDivElement>(null);
+  const { profile } = useAppSelector((state) => state.user);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
 
   const roomTypes: RoomType[] = [
     {
@@ -46,8 +51,31 @@ const PostRoomPage = () => {
   }, []);
 
   const handlePostClick = (link: string) => {
+    // Check if user is logged in
+    if (!profile) {
+      toast.info("Vui lòng đăng nhập để đăng tin mới");
+      navigate("/login");
+      return;
+    }
+
+    // Check if user has available post slots
+    const numberOfPosts = profile.numberOfPosts || 0;
+
+    if (numberOfPosts <= 0) {
+      setShowPurchaseModal(true);
+      return;
+    }
+
+    // If they have available posts, navigate to the post page
     navigate(link);
   };
+
+  const handlePurchaseSuccess = () => {
+    toast.success("Mua gói thành công! Bạn có thể tiếp tục đăng tin.");
+  };
+
+  // Get available posts count
+  const availablePosts = profile?.numberOfPosts || 0;
 
   return (
     <div className="main-content d-flex flex-column flex-md-row">
@@ -80,12 +108,19 @@ const PostRoomPage = () => {
                   <img
                     src={room.icon}
                     alt={room.title}
-                    style={{ width: "90px", height: "70px", margin: "0 auto" }}
+                    style={{
+                      width: "90px",
+                      height: "70px",
+                      margin: "0 auto",
+                    }}
                   />
                   <h5 className="mt-3">{room.title}</h5>
                   <p className="text-muted flex-grow-1">{room.description}</p>
                   <Button
-                    style={{ backgroundColor: "#0054cd", borderColor: "#0054cd" }}
+                    style={{
+                      backgroundColor: "#0054cd",
+                      borderColor: "#0054cd",
+                    }}
                     onClick={() => handlePostClick(room.link)}
                   >
                     Đăng ngay
@@ -96,6 +131,11 @@ const PostRoomPage = () => {
           </Row>
         </Container>
       </div>
+      <PurchaseSlot
+        show={showPurchaseModal}
+        onHide={() => setShowPurchaseModal(false)}
+        onPurchaseSuccess={handlePurchaseSuccess}
+      />
       <style>{`
         @media (max-width: 767.98px) {
           .main-content {
