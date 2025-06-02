@@ -85,7 +85,7 @@ const PostRoomPage = () => {
                   <h5 className="mt-3">{room.title}</h5>
                   <p className="text-muted flex-grow-1">{room.description}</p>
                   <Button
-                    variant="primary"
+                    style={{ backgroundColor: "#0054cd", borderColor: "#0054cd" }}
                     onClick={() => handlePostClick(room.link)}
                   >
                     Đăng ngay
