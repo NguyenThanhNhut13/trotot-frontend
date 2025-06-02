@@ -15,6 +15,7 @@ import {
   FaCrown,
   FaChevronRight,
   FaBars,
+  FaTimes,
 } from "react-icons/fa"
 import PurchasePostModal from "../RoomPostPage/PurchaseSlot"
 import paymentAPI from "../../apis/payment.api"
@@ -346,7 +347,27 @@ const AppSidebar = ({ show = true, onHide, variant = "fixed" }: SidebarProps) =>
   if (variant === "offcanvas") {
     return (
       <Offcanvas show={show} onHide={onHide} placement="start" style={{ width: "280px", maxWidth: "80vw" }}>
-        <Offcanvas.Body className="p-0">{sidebarContent}</Offcanvas.Body>
+        <Offcanvas.Body className="p-0 position-relative">
+          <Button
+            onClick={onHide}
+            variant="light"
+            className="position-absolute d-flex align-items-center justify-content-center shadow-sm"
+            style={{
+              top: 10,
+              right: 10,
+              zIndex: 1050,
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              padding: 0,
+              backgroundColor: "white"
+            }}
+          >
+            <FaTimes size={16} />
+          </Button>
+          
+          {sidebarContent}
+        </Offcanvas.Body>
       </Offcanvas>
     )
   }
@@ -355,7 +376,17 @@ const AppSidebar = ({ show = true, onHide, variant = "fixed" }: SidebarProps) =>
 }
 
 // Layout wrapper component
-export const SidebarLayout = ({ children }: { children: React.ReactNode }) => {
+interface SidebarLayoutProps {
+  children: React.ReactNode;
+  showMobile?: boolean;
+  setShowMobile?: (show: boolean) => void;
+}
+
+export const SidebarLayout: React.FC<SidebarLayoutProps> = ({ 
+  children, 
+  showMobile = false,
+  setShowMobile = () => {}
+}) => {
   const { isMobile, isTablet } = useResponsive()
   const [showMobileSidebar, setShowMobileSidebar] = useState(false)
 
