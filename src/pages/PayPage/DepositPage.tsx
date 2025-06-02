@@ -223,37 +223,40 @@ const DepositPage: React.FC = () => {
                             <div
                               key={method.id}
                               className={`border rounded-3 p-3 cursor-pointer transition-all ${
-                                isSelected ? "border-primary bg-primary bg-opacity-10" : "border-light-subtle"
+                                isSelected ? "border-primary" : "border-light-subtle"
                               }`}
-                              style={{ cursor: "pointer" }}
+                              style={{
+                                cursor: "pointer",
+                                backgroundColor: isSelected ? "#dee2e6" : undefined,
+                              }}
                               onClick={() => setSelectedMethod(method.id)}
                             >
                               <div className="d-flex align-items-center">
-                                <div
-                                  className="rounded-circle d-flex align-items-center justify-content-center me-3"
-                                  style={{
-                                    width: "48px",
-                                    height: "48px",
-                                    backgroundColor: isSelected ? method.color : `${method.color}20`,
-                                    color: isSelected ? "white" : method.color,
-                                  }}
-                                >
-                                  <IconComponent size={20} />
-                                </div>
+                              <div
+                                className="rounded-circle d-flex align-items-center justify-content-center me-3"
+                                style={{
+                                width: "48px",
+                                height: "48px",
+                                backgroundColor: isSelected ? method.color : `${method.color}20`,
+                                color: isSelected ? "white" : method.color,
+                                }}
+                              >
+                                <IconComponent size={20} />
+                              </div>
 
-                                <div className="flex-grow-1">
-                                  <div className="d-flex align-items-center gap-2">
-                                    <h6 className="mb-0 fw-semibold">{method.name}</h6>
-                                    {method.recommended && (
-                                      <Badge bg="success" style={{ fontSize: "0.7rem" }}>
-                                        Khuyến nghị
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <small className="text-muted">{method.description}</small>
+                              <div className="flex-grow-1">
+                                <div className="d-flex align-items-center gap-2">
+                                <h6 className="mb-0 fw-semibold">{method.name}</h6>
+                                {method.recommended && (
+                                  <Badge bg="success" style={{ fontSize: "0.7rem" }}>
+                                  Khuyến nghị
+                                  </Badge>
+                                )}
                                 </div>
+                                <small className="text-muted">{method.description}</small>
+                              </div>
 
-                                {isSelected && <FaCheckCircle className="text-primary" size={20} />}
+                              {isSelected && <FaCheckCircle className="text-primary" size={20} />}
                               </div>
                             </div>
                           )
@@ -296,6 +299,7 @@ const DepositPage: React.FC = () => {
                       style={{
                         borderRadius: "12px",
                         fontSize: "1.1rem",
+                        backgroundColor: "#0054cd",
                       }}
                       onClick={handleSubmit}
                       disabled={!selectedAmount || isLoading}
