@@ -2,7 +2,18 @@
 
 import type React from "react"
 import { useState } from "react"
-import { FaWallet, FaCreditCard, FaQrcode, FaUniversity, FaCheckCircle, FaSpinner } from "react-icons/fa"
+import {
+  FaWallet,
+  FaCreditCard,
+  FaQrcode,
+  FaUniversity,
+  FaCheckCircle,
+  FaSpinner,
+  FaBars,
+  FaArrowRight,
+  FaShieldAlt,
+} from "react-icons/fa"
+import { Container, Row, Col, Card, Button, Offcanvas, Badge } from "react-bootstrap"
 import paymentAPI from "../../apis/payment.api"
 import { toast } from "react-toastify"
 import { useAppSelector } from "../../store/hook"
@@ -12,43 +23,48 @@ const DepositPage: React.FC = () => {
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null)
   const [selectedMethod, setSelectedMethod] = useState<string>("vnpay")
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false)
   const { profile } = useAppSelector((state) => state.user)
 
-  // Danh sách số tiền có thể chọn
-  const amounts = [50000, 100000, 200000, 300000, 500000, 1000000, 1500000, 2000000]
+  // Simplified amount options with popular choices first
+  const amounts = [
+    { value: 20000, label: "20K", popular: true },
+    { value: 50000, label: "50K", popular: true },
+    { value: 100000, label: "100K", popular: true },
+    { value: 200000, label: "200K", popular: true },
+    { value: 500000, label: "500K", popular: false },
+    { value: 1000000, label: "1M", popular: false },
+    { value: 2000000, label: "2M", popular: false },
+    { value: 5000000, label: "5M", popular: false },
+  ]
 
-  // Danh sách phương thức thanh toán
+  // Simplified payment methods
   const paymentMethods = [
-    {
-      id: "qrcode",
-      name: "QR CODE",
-      icon: FaQrcode,
-      color: "#28a745",
-      description: "Quét mã QR để thanh toán",
-    },
     {
       id: "vnpay",
       name: "VNPAY",
       icon: FaCreditCard,
-      color: "#0046a8",
-      description: "Ví điện tử VNPAY",
+      color: "#1976d2",
+      description: "Nhanh chóng & an toàn",
+      recommended: true,
+    },
+    {
+      id: "qrcode",
+      name: "QR Code",
+      icon: FaQrcode,
+      color: "#4caf50",
+      description: "Quét mã thanh toán",
+      recommended: false,
     },
     {
       id: "atm",
-      name: "ATM",
+      name: "Ngân hàng",
       icon: FaUniversity,
-      color: "#dc3545",
-      description: "Thẻ ATM/Internet Banking",
+      color: "#ff9800",
+      description: "ATM/Internet Banking",
+      recommended: false,
     },
   ]
-
-  const handleAmountSelect = (amount: number) => {
-    setSelectedAmount(amount)
-  }
-
-  const handleMethodSelect = (method: string) => {
-    setSelectedMethod(method)
-  }
 
   const formatVND = (value: number) => {
     return new Intl.NumberFormat("vi-VN", {
@@ -89,351 +105,235 @@ const DepositPage: React.FC = () => {
   }
 
   return (
-    <SidebarLayout>
-      <div
-        style={{
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-          margin: "-1rem",
-          padding: "1rem",
-          minHeight: "100vh",
-        }}
-      >
-        <div className="container-fluid">
-          {/* Header */}
-          <div className="text-center mb-4">
-            <div
-              className="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
-              style={{
-                width: "80px",
-                height: "80px",
-                background: "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)",
-                boxShadow: "0 8px 32px rgba(0, 70, 168, 0.3)",
-              }}
-            >
-              <FaWallet size={32} color="white" />
+    <div className="min-vh-100 bg-light">
+      <Container fluid>
+        <Row>
+          {/* Mobile Header */}
+          <div className="d-lg-none sticky-top bg-white border-bottom p-3 shadow-sm">
+            <div className="d-flex align-items-center gap-3">
+              <Button
+                variant="outline-secondary"
+                size="sm"
+                className="d-flex align-items-center justify-content-center"
+                onClick={() => setShowMobileSidebar(true)}
+                style={{ width: "40px", height: "40px", borderRadius: "8px" }}
+              >
+                <FaBars size={16} />
+              </Button>
+              <h6 className="mb-0 fw-semibold text-primary">Nạp tiền vào ví</h6>
             </div>
-            <h2
-              className="fw-bold mb-2"
-              style={{
-                background: "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                fontSize: "clamp(1.5rem, 4vw, 2.5rem)",
-              }}
-            >
-              NẠP TIỀN VÀO VÍ
-            </h2>
-            <p className="text-muted mb-0" style={{ fontSize: "clamp(0.9rem, 2vw, 1.1rem)" }}>
-              Chọn số tiền và phương thức thanh toán phù hợp
-            </p>
           </div>
 
-          <div className="row justify-content-center">
-            <div className="col-12 col-lg-8 col-xl-6">
-              {/* Amount Selection */}
-              <div
-                className="bg-white rounded-4 p-4 mb-4 shadow-lg"
-                style={{
-                  border: "1px solid rgba(0, 70, 168, 0.1)",
-                  backdropFilter: "blur(10px)",
-                }}
-              >
-                <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: "#0046a8" }}>
-                  <div
-                    className="rounded-circle me-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      background: "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)",
-                    }}
-                  >
-                    <span className="text-white fw-bold" style={{ fontSize: "0.8rem" }}>
-                      1
-                    </span>
-                  </div>
-                  Chọn số tiền nạp
-                </h5>
+          {/* Desktop Sidebar */}
+          <Col lg={3} className="d-none d-lg-block px-0">
+            <div style={{ position: "sticky", top: 0, height: "100vh", overflowY: "auto" }}>
+              <SidebarLayout>{null}</SidebarLayout>
+            </div>
+          </Col>
 
-                <div className="row g-3">
-                  {amounts.map((amount) => (
-                    <div key={amount} className="col-6 col-md-4 col-lg-3">
-                      <button
-                        className={`btn w-100 h-100 d-flex flex-column align-items-center justify-content-center position-relative overflow-hidden`}
-                        style={{
-                          minHeight: "80px",
-                          background:
-                            selectedAmount === amount ? "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)" : "#f8f9fa",
-                          color: selectedAmount === amount ? "white" : "#495057",
-                          border: selectedAmount === amount ? "2px solid #0046a8" : "2px solid #e9ecef",
-                          borderRadius: "16px",
-                          fontSize: "clamp(0.7rem, 2vw, 0.9rem)",
-                          fontWeight: "600",
-                          transition: "all 0.3s ease",
-                          transform: selectedAmount === amount ? "translateY(-2px)" : "translateY(0)",
-                          boxShadow:
-                            selectedAmount === amount
-                              ? "0 8px 25px rgba(0, 70, 168, 0.3)"
-                              : "0 2px 8px rgba(0,0,0,0.1)",
-                        }}
-                        onClick={() => handleAmountSelect(amount)}
-                        onMouseEnter={(e) => {
-                          if (selectedAmount !== amount) {
-                            e.currentTarget.style.transform = "translateY(-2px)"
-                            e.currentTarget.style.boxShadow = "0 6px 20px rgba(0,0,0,0.15)"
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedAmount !== amount) {
-                            e.currentTarget.style.transform = "translateY(0)"
-                            e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)"
-                          }
-                        }}
-                      >
-                        <span className="fw-bold">{formatVND(amount)}</span>
-                        {selectedAmount === amount && (
-                          <FaCheckCircle className="position-absolute" style={{ top: "8px", right: "8px" }} size={16} />
-                        )}
-                      </button>
-                    </div>
-                  ))}
+          {/* Mobile Sidebar */}
+          <Offcanvas
+            show={showMobileSidebar}
+            onHide={() => setShowMobileSidebar(false)}
+            placement="start"
+            className="d-lg-none"
+            style={{ width: "280px" }}
+          >
+            <Offcanvas.Header closeButton>
+              <Offcanvas.Title>Menu</Offcanvas.Title>
+            </Offcanvas.Header>
+            <Offcanvas.Body className="p-0">
+              <SidebarLayout>{null}</SidebarLayout>
+            </Offcanvas.Body>
+          </Offcanvas>
+
+          {/* Main Content */}
+          <Col lg={9} className="px-3 px-md-4">
+            <div className="py-4">
+              {/* Simple Header */}
+              <div className="text-center mb-5">
+                <div className="mb-3">
+                  <FaWallet size={48} className="text-primary" />
                 </div>
+                <h1 className="h2 fw-bold text-dark mb-2">Nạp tiền vào ví</h1>
+                <p className="text-muted">Chọn số tiền bạn muốn nạp vào tài khoản</p>
               </div>
 
-              {/* Payment Method Selection */}
-              <div
-                className="bg-white rounded-4 p-4 mb-4 shadow-lg"
-                style={{
-                  border: "1px solid rgba(0, 70, 168, 0.1)",
-                  backdropFilter: "blur(10px)",
-                }}
-              >
-                <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: "#0046a8" }}>
-                  <div
-                    className="rounded-circle me-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      background: "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)",
-                    }}
-                  >
-                    <span className="text-white fw-bold" style={{ fontSize: "0.8rem" }}>
-                      2
-                    </span>
-                  </div>
-                  Chọn phương thức thanh toán
-                </h5>
+              <Row className="justify-content-center">
+                <Col xs={12} lg={8} xl={6}>
+                  {/* Amount Selection - Simplified */}
+                  <Card className="mb-4 border-0 shadow-sm">
+                    <Card.Body className="p-4">
+                      <h5 className="fw-semibold mb-3 text-dark">Chọn số tiền</h5>
 
-                <div className="row g-3">
-                  {paymentMethods.map((method) => {
-                    const IconComponent = method.icon
-                    return (
-                      <div key={method.id} className="col-12 col-sm-4">
-                        <div
-                          className={`card h-100 position-relative overflow-hidden`}
-                          style={{
-                            cursor: "pointer",
-                            border: selectedMethod === method.id ? `3px solid ${method.color}` : "2px solid #e9ecef",
-                            borderRadius: "16px",
-                            transition: "all 0.3s ease",
-                            transform: selectedMethod === method.id ? "translateY(-4px)" : "translateY(0)",
-                            boxShadow:
-                              selectedMethod === method.id
-                                ? `0 12px 30px ${method.color}40`
-                                : "0 4px 12px rgba(0,0,0,0.1)",
-                            background:
-                              selectedMethod === method.id
-                                ? `linear-gradient(135deg, ${method.color}15 0%, ${method.color}05 100%)`
-                                : "white",
-                          }}
-                          onClick={() => handleMethodSelect(method.id)}
-                          onMouseEnter={(e) => {
-                            if (selectedMethod !== method.id) {
-                              e.currentTarget.style.transform = "translateY(-2px)"
-                              e.currentTarget.style.boxShadow = "0 8px 20px rgba(0,0,0,0.15)"
-                            }
-                          }}
-                          onMouseLeave={(e) => {
-                            if (selectedMethod !== method.id) {
-                              e.currentTarget.style.transform = "translateY(0)"
-                              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.1)"
-                            }
-                          }}
-                        >
-                          <div className="card-body text-center p-4">
+                      <Row className="g-3">
+                        {amounts.map((amount) => (
+                          <Col key={amount.value} xs={6} md={4}>
+                            <Button
+                              variant={selectedAmount === amount.value ? "primary" : "outline-secondary"}
+                              className="w-100 position-relative"
+                              style={{
+                                height: "70px",
+                                borderRadius: "12px",
+                                fontSize: "0.9rem",
+                                fontWeight: "600",
+                              }}
+                              onClick={() => setSelectedAmount(amount.value)}
+                            >
+                              <div className="d-flex flex-column align-items-center">
+                                <span className="fw-bold">{amount.label}</span>
+                                <small className="opacity-75">{formatVND(amount.value)}</small>
+                              </div>
+
+                              {amount.popular && selectedAmount !== amount.value && (
+                                <Badge
+                                  bg="warning"
+                                  className="position-absolute top-0 end-0 translate-middle"
+                                  style={{ fontSize: "0.6rem" }}
+                                >
+                                  Phổ biến
+                                </Badge>
+                              )}
+
+                              {selectedAmount === amount.value && (
+                                <FaCheckCircle
+                                  className="position-absolute top-0 end-0 translate-middle text-white"
+                                  style={{ backgroundColor: "#0d6efd", borderRadius: "50%" }}
+                                  size={16}
+                                />
+                              )}
+                            </Button>
+                          </Col>
+                        ))}
+                      </Row>
+                    </Card.Body>
+                  </Card>
+
+                  {/* Payment Method - Simplified */}
+                  <Card className="mb-4 border-0 shadow-sm">
+                    <Card.Body className="p-4">
+                      <h5 className="fw-semibold mb-3 text-dark">Phương thức thanh toán</h5>
+
+                      <div className="d-grid gap-3">
+                        {paymentMethods.map((method) => {
+                          const IconComponent = method.icon
+                          const isSelected = selectedMethod === method.id
+
+                          return (
                             <div
-                              className="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
-                              style={{
-                                width: "60px",
-                                height: "60px",
-                                background: selectedMethod === method.id ? method.color : `${method.color}20`,
-                                color: selectedMethod === method.id ? "white" : method.color,
-                              }}
+                              key={method.id}
+                              className={`border rounded-3 p-3 cursor-pointer transition-all ${
+                                isSelected ? "border-primary bg-primary bg-opacity-10" : "border-light-subtle"
+                              }`}
+                              style={{ cursor: "pointer" }}
+                              onClick={() => setSelectedMethod(method.id)}
                             >
-                              <IconComponent size={24} />
+                              <div className="d-flex align-items-center">
+                                <div
+                                  className="rounded-circle d-flex align-items-center justify-content-center me-3"
+                                  style={{
+                                    width: "48px",
+                                    height: "48px",
+                                    backgroundColor: isSelected ? method.color : `${method.color}20`,
+                                    color: isSelected ? "white" : method.color,
+                                  }}
+                                >
+                                  <IconComponent size={20} />
+                                </div>
+
+                                <div className="flex-grow-1">
+                                  <div className="d-flex align-items-center gap-2">
+                                    <h6 className="mb-0 fw-semibold">{method.name}</h6>
+                                    {method.recommended && (
+                                      <Badge bg="success" style={{ fontSize: "0.7rem" }}>
+                                        Khuyến nghị
+                                      </Badge>
+                                    )}
+                                  </div>
+                                  <small className="text-muted">{method.description}</small>
+                                </div>
+
+                                {isSelected && <FaCheckCircle className="text-primary" size={20} />}
+                              </div>
                             </div>
-                            <h6
-                              className="fw-bold mb-2"
-                              style={{
-                                color: selectedMethod === method.id ? method.color : "#495057",
-                                fontSize: "clamp(0.8rem, 2vw, 1rem)",
-                              }}
-                            >
-                              {method.name}
-                            </h6>
-                            <p className="text-muted mb-0" style={{ fontSize: "clamp(0.7rem, 1.5vw, 0.8rem)" }}>
-                              {method.description}
-                            </p>
-                            {selectedMethod === method.id && (
-                              <FaCheckCircle
-                                className="position-absolute"
-                                style={{ top: "12px", right: "12px", color: method.color }}
-                                size={20}
-                              />
-                            )}
-                          </div>
-                        </div>
+                          )
+                        })}
                       </div>
-                    )
-                  })}
-                </div>
-              </div>
+                    </Card.Body>
+                  </Card>
 
-              {/* Transaction Details */}
-              <div
-                className="bg-white rounded-4 p-4 mb-4 shadow-lg"
-                style={{
-                  border: "1px solid rgba(0, 70, 168, 0.1)",
-                  backdropFilter: "blur(10px)",
-                }}
-              >
-                <h5 className="fw-bold mb-3 d-flex align-items-center" style={{ color: "#0046a8" }}>
-                  <div
-                    className="rounded-circle me-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: "32px",
-                      height: "32px",
-                      background: "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)",
-                    }}
-                  >
-                    <span className="text-white fw-bold" style={{ fontSize: "0.8rem" }}>
-                      3
-                    </span>
-                  </div>
-                  Chi tiết giao dịch
-                </h5>
+                  {/* Summary - Simplified */}
+                  {selectedAmount && (
+                    <Card className="mb-4 border-0 shadow-sm bg-light">
+                      <Card.Body className="p-4">
+                        <h6 className="fw-semibold mb-3 text-dark">Tóm tắt giao dịch</h6>
 
-                <div
-                  className="rounded-3 p-4"
-                  style={{
-                    background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
-                    border: "1px solid #dee2e6",
-                  }}
-                >
-                  <div className="row mb-3">
-                    <div className="col-6">
-                      <span className="text-muted" style={{ fontSize: "clamp(0.8rem, 2vw, 0.9rem)" }}>
-                        Số tiền thanh toán:
-                      </span>
-                    </div>
-                    <div className="col-6 text-end">
-                      <span
-                        className="fw-bold"
-                        style={{
-                          color: "#0046a8",
-                          fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
-                        }}
-                      >
-                        {selectedAmount ? formatVND(selectedAmount) : "Chưa chọn"}
-                      </span>
-                    </div>
-                  </div>
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <span className="text-muted">Số tiền nạp:</span>
+                          <span className="fw-bold text-primary fs-5">{formatVND(selectedAmount)}</span>
+                        </div>
 
-                  <div className="row mb-3">
-                    <div className="col-6">
-                      <span className="text-muted" style={{ fontSize: "clamp(0.8rem, 2vw, 0.9rem)" }}>
-                        Phương thức:
-                      </span>
-                    </div>
-                    <div className="col-6 text-end">
-                      <span
-                        className="fw-bold"
-                        style={{
-                          color: "#0046a8",
-                          fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
-                        }}
-                      >
-                        {paymentMethods.find((m) => m.id === selectedMethod)?.name}
-                      </span>
-                    </div>
+                        <div className="d-flex justify-content-between align-items-center mb-3">
+                          <span className="text-muted">Phương thức:</span>
+                          <span className="fw-semibold">
+                            {paymentMethods.find((m) => m.id === selectedMethod)?.name}
+                          </span>
+                        </div>
+
+                        <div className="d-flex align-items-center text-success">
+                          <FaShieldAlt className="me-2" size={14} />
+                          <small>Giao dịch được bảo mật 100%</small>
+                        </div>
+                      </Card.Body>
+                    </Card>
+                  )}
+
+                  {/* Submit Button - Clean */}
+                  <div className="d-grid">
+                    <Button
+                      size="lg"
+                      className="py-3 fw-semibold"
+                      style={{
+                        borderRadius: "12px",
+                        fontSize: "1.1rem",
+                      }}
+                      onClick={handleSubmit}
+                      disabled={!selectedAmount || isLoading}
+                    >
+                      {isLoading ? (
+                        <>
+                          <FaSpinner className="me-2 fa-spin" />
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        <>
+                          Thanh toán {selectedAmount ? formatVND(selectedAmount) : ""}
+                          <FaArrowRight className="ms-2" />
+                        </>
+                      )}
+                    </Button>
                   </div>
 
-                  <div className="row">
-                    <div className="col-6">
-                      <span className="text-muted" style={{ fontSize: "clamp(0.8rem, 2vw, 0.9rem)" }}>
-                        Nạp vào tài khoản:
-                      </span>
-                    </div>
-                    <div className="col-6 text-end">
-                      <span
-                        className="fw-bold"
-                        style={{
-                          color: "#0046a8",
-                          fontSize: "clamp(0.9rem, 2vw, 1.1rem)",
-                        }}
-                      >
-                        {profile?.fullName || "Chưa đăng nhập"}
-                      </span>
+                  {/* Trust indicators */}
+                  <div className="text-center mt-4">
+                    <div className="d-flex justify-content-center align-items-center gap-4 text-muted">
+                      <div className="d-flex align-items-center">
+                        <FaShieldAlt className="me-1" size={12} />
+                        <small>Bảo mật SSL</small>
+                      </div>
+                      <div className="d-flex align-items-center">
+                        <FaCheckCircle className="me-1" size={12} />
+                        <small>Xử lý tức thì</small>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                className="btn w-100 py-3 fw-bold position-relative overflow-hidden"
-                style={{
-                  background:
-                    selectedAmount && !isLoading ? "linear-gradient(135deg, #0046a8 0%, #0056d3 100%)" : "#6c757d",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "16px",
-                  fontSize: "clamp(1rem, 2.5vw, 1.2rem)",
-                  transition: "all 0.3s ease",
-                  boxShadow:
-                    selectedAmount && !isLoading ? "0 8px 25px rgba(0, 70, 168, 0.4)" : "0 4px 12px rgba(0,0,0,0.2)",
-                }}
-                onClick={handleSubmit}
-                disabled={!selectedAmount || isLoading}
-                onMouseEnter={(e) => {
-                  if (selectedAmount && !isLoading) {
-                    e.currentTarget.style.transform = "translateY(-2px)"
-                    e.currentTarget.style.boxShadow = "0 12px 35px rgba(0, 70, 168, 0.5)"
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedAmount && !isLoading) {
-                    e.currentTarget.style.transform = "translateY(0)"
-                    e.currentTarget.style.boxShadow = "0 8px 25px rgba(0, 70, 168, 0.4)"
-                  }
-                }}
-              >
-                {isLoading ? (
-                  <div className="d-flex align-items-center justify-content-center">
-                    <FaSpinner className="me-2 fa-spin" />
-                    Đang xử lý...
-                  </div>
-                ) : (
-                  <div className="d-flex align-items-center justify-content-center">
-                    <FaWallet className="me-2" />
-                    Tiến hành thanh toán
-                  </div>
-                )}
-              </button>
+                </Col>
+              </Row>
             </div>
-          </div>
-        </div>
-      </div>
-    </SidebarLayout>
+          </Col>
+        </Row>
+      </Container>
+    </div>
   )
 }
 
