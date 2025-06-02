@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Modal, Button, Row, Col, Spinner } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -11,6 +11,10 @@ interface PurchasePostModalProps {
   onHide: () => void;
   total?: number;
   onPurchaseSuccess?: () => void;
+}
+
+interface HandleCloseSuccessModal {
+  (): Promise<void>;
 }
 
 const packages = [
@@ -32,16 +36,26 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [newPostCount, setNewPostCount] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [insufficientFunds, setInsufficientFunds] = useState(false);
   const navigate = useNavigate();
   const accessToken = localStorage.getItem("accessToken");
   const { profile } = useAppSelector(state => state.user);
   const dispatch = useAppDispatch();
 
-  const handlePurchase = async () => {
-    if (!selectedPackage) {
-      toast.error("Vui lòng chọn gói đăng tin trước khi thanh toán!");
-      return;
+  // Get user balance from profile
+  const userBalance = total || 0;
+  const totalAmount = packages.find((p) => p.amount === selectedPackage)?.price || 0;
+
+  // Check if balance is sufficient whenever package selection or balance changes
+  useEffect(() => {
+    if (userBalance < totalAmount) {
+      setInsufficientFunds(true);
+    } else {
+      setInsufficientFunds(false);
     }
+  }, [selectedPackage, userBalance, totalAmount]);
+
+  const handlePurchase = async () => {
     if (!accessToken) {
       toast.info("Vui lòng đăng nhập để thực hiện thanh toán!");
       navigate("/login");
@@ -54,6 +68,16 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
       onHide();
       return;
     }
+    // Add balance check before purchase
+    if (userBalance < totalAmount) {
+      toast.error("Số dư không đủ để thực hiện giao dịch này. Vui lòng nạp thêm tiền!");
+      return;
+    }
+    
+    if (!selectedPackage) {
+      toast.error("Vui lòng chọn gói đăng tin trước khi thanh toán!");
+      return;
+    }
     
     // Set loading state
     setIsLoading(true);
@@ -63,16 +87,6 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
       if (response.data?.success) {
         // Calculate new count for display
         const newCount = (profile.numberOfPosts || 0) + selectedPackage;
-        setNewPostCount(newCount);
-        
-        // Instead of just updating profile locally, refresh from server
-        try {
-          await dispatch(getProfile()).unwrap();
-          console.log("Profile refreshed after purchase");
-        } catch (profileError) {
-          console.error("Error refreshing profile:", profileError);
-        }
-        
         setShowSuccessModal(true);
         onPurchaseSuccess?.();
         onHide();
@@ -93,12 +107,15 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
     }
   };
 
-  const handleCloseSuccessModal = () => {
+  const handleCloseSuccessModal: HandleCloseSuccessModal = async () => {
+    try {
+      await dispatch(getProfile()).unwrap();
+      console.log("Profile refreshed after purchase");
+    } catch (profileError: unknown) {
+      console.error("Error refreshing profile:", profileError);
+    }
     setShowSuccessModal(false);
-    setTimeout(() => window.location.reload(), 500);
   };
-
-  const totalAmount = packages.find((p) => p.amount === selectedPackage)?.price || 0;
 
   return (
     <>
@@ -204,6 +221,20 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
               </p>
             </div>
           </div>
+
+          {/* Balance warning message */}
+          {insufficientFunds && (
+            <div className="px-4 mb-3">
+              <div className="alert alert-warning d-flex align-items-center" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-exclamation-triangle-fill me-2" viewBox="0 0 16 16">
+                  <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                <div>
+                  Số dư của bạn không đủ để mua gói này. Vui lòng nạp thêm tiền hoặc chọn gói khác.
+                </div>
+              </div>
+            </div>
+          )}
         </Modal.Body>
         <Modal.Footer className="border-0 justify-content-center pb-4 pt-0">
           <Button
@@ -225,8 +256,9 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
               backgroundColor: "#0d6efd",
               border: "none",
               minWidth: "120px", // Ensure button doesn't change size when spinner appears
+              opacity: insufficientFunds ? "0.65" : "1"
             }}
-            disabled={!selectedPackage || isLoading} // Disable button while loading or no package selected
+            disabled={!selectedPackage || isLoading || insufficientFunds} // Disable button while loading or no package selected
           >
             {isLoading ? (
               <>
@@ -241,7 +273,7 @@ const PurchasePostModal: React.FC<PurchasePostModalProps> = ({
                 Đang xử lý...
               </>
             ) : (
-              'Mua gói'
+              insufficientFunds ? 'Số dư không đủ' : 'Mua gói'
             )}
           </Button>
         </Modal.Footer>
