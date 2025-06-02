@@ -1,6 +1,6 @@
-import axios, { AxiosError, type AxiosInstance } from "axios";
-import HttpStatusCode from "../constants/httpStatusCode.enum";
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig } from "axios";
 import { toast } from "react-toastify";
+import HttpStatusCode from "../constants/httpStatusCode.enum";
 import { AuthResponse, RefreshTokenReponse } from "../types/auth.type";
 import {
   clearLS,
@@ -19,6 +19,52 @@ import {
 } from "../apis/auth.api";
 import { isAxiosExpiredTokenError, isAxiosUnauthorizedError } from "./utils";
 import { ErrorResponse } from "../types/utils.type";
+
+// Add this retry function
+const retryRequest = async (
+  fn: () => Promise<any>,
+  maxRetries = 3,
+  delay = 1000
+): Promise<any> => {
+  let retries = 0;
+  let lastError: AxiosError | null = null;
+
+  while (retries < maxRetries) {
+    try {
+      return await fn();
+    } catch (error) {
+      const axiosError = error as AxiosError;
+
+      // Only retry on 500 errors
+      if (
+        !axiosError.response ||
+        axiosError.response.status < 500 ||
+        axiosError.response.status >= 600
+      ) {
+        throw error; // Don't retry for non-500 errors
+      }
+
+      lastError = axiosError;
+      retries++;
+      console.log(
+        `API call failed with 500 error. Retrying attempt ${retries}/${maxRetries} in ${delay}ms...`
+      );
+
+      // Wait before retry
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      // Exponential backoff
+      delay *= 2;
+    }
+  }
+
+  if (lastError) {
+    console.error("All retry attempts failed:", lastError);
+    throw lastError;
+  } else {
+    throw new Error("All retry attempts failed, but no error was captured.");
+  }
+};
 
 export class Http {
   instance: AxiosInstance;
@@ -65,7 +111,7 @@ export class Http {
 
   private handleResponse(response: any) {
     const { url } = response.config;
-    
+
     if (url === URL_LOGIN) {
       const data = response.data as AuthResponse;
       this.accessToken = data.data.accessToken;
@@ -77,37 +123,64 @@ export class Http {
       this.refreshToken = "";
       clearLS();
     }
-    
+
     return response;
   }
 
-  private handleError(error: AxiosError) {
+  private async handleError(error: AxiosError) {
+    const config = error.response?.config;
+
+    // Try to retry 500 errors
+    if (
+      error.response?.status &&
+      error.response.status >= 500 &&
+      error.response.status < 600 &&
+      config
+    ) {
+      try {
+        return await retryRequest(() => this.instance(config), 3, 1000);
+      } catch (retryError) {
+        // If retry fails, continue with normal error handling
+        console.error("Retry failed after multiple attempts:", retryError);
+      }
+    }
+
     // Handle general error messages
-    if (![HttpStatusCode.UnprocessableEntity, HttpStatusCode.Unauthorized].includes(
-      error.response?.status as number
-    )) {
+    if (
+      ![
+        HttpStatusCode.UnprocessableEntity,
+        HttpStatusCode.Unauthorized,
+      ].includes(error.response?.status as number)
+    ) {
       const message =
         (error.response?.data as { message?: string })?.message || error.message;
       toast.error(message);
     }
 
     // Handle unauthorized errors
-    if (isAxiosUnauthorizedError<ErrorResponse<{ name: string; message: string }>>(error)) {
+    if (
+      isAxiosUnauthorizedError<ErrorResponse<{ name: string; message: string }>>(error)
+    ) {
       const config = error.response?.config || { headers: {}, url: "" };
       const { url } = config;
 
       // Handle expired token
-      if (isAxiosExpiredTokenError(error) && url !== URL_REFRESH_TOKEN && url !== URL_LOGIN) {
+      if (
+        isAxiosExpiredTokenError(error) &&
+        url !== URL_REFRESH_TOKEN &&
+        url !== URL_LOGIN
+      ) {
         return this.handleTokenRefresh(config);
       }
 
       // Skip error toast for login failures
       if (url !== URL_LOGIN) {
-        const errorMessage = error.response?.data?.data?.message || error.response?.data?.message;
+        const errorMessage =
+          error.response?.data?.data?.message || error.response?.data?.message;
         toast.error(errorMessage);
       }
     }
-    
+
     return Promise.reject(error);
   }
 

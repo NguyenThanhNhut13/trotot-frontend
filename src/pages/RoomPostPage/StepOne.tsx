@@ -33,7 +33,8 @@ import {
 } from "react-icons/fa"
 import * as cocoSsd from "@tensorflow-models/coco-ssd"
 import "@tensorflow/tfjs"
-import { useAppSelector } from "../../store/hook"
+import { useAppDispatch, useAppSelector } from "../../store/hook"
+import { getProfile } from "../../store/slices/userSlice"
 
 type ImageFeedback = {
   url: string
@@ -42,6 +43,7 @@ type ImageFeedback = {
 }
 
 const StepOne = () => {
+  const dispatch = useAppDispatch()
   const navigate = useNavigate()
   const { profile } = useAppSelector((state) => state.user)
   const [loading, setLoading] = useState(false)
@@ -142,15 +144,35 @@ const StepOne = () => {
     retryDelay: (attempt) => 3000 + (attempt - 1) * 1000,
     onSuccess: async (data) => {
       console.log("Mutation Success Response:", data)
+
+      // Refresh user profile with better error handling for network issues
+      try {
+        await dispatch(getProfile())
+        console.log("User profile refreshed successfully")
+      } catch (refreshError: any) {
+        console.error("Error refreshing user profile:", refreshError)
+
+        // Special handling for network/CORS errors
+        if (refreshError.message === "Network Error" || refreshError.code === "ERR_NETWORK") {
+          toast.warning(
+            "Không thể cập nhật thông tin người dùng do lỗi kết nối, nhưng phòng của bạn đã được đăng thành công.",
+          )
+        }
+      }
+
       navigate("/post-room")
       toast.success("Đăng tin thành công!")
       localStorage.removeItem("listAPARTMENTPagging")
       localStorage.removeItem("listBOARDING_HOUSEPagging")
       localStorage.removeItem("listWHOLE_HOUSEPagging")
+
+      // Always disable loading regardless of profile refresh outcome
+      setLoading(false)
     },
     onError: (error) => {
       console.error("Mutation Error:", error)
       toast.error("Có lỗi xảy ra khi đăng tin. Vui lòng thử lại.")
+      setLoading(false)
     },
   })
 
@@ -158,7 +180,7 @@ const StepOne = () => {
     try {
       // Start loading
       setLoading(true)
-      
+
       // Validate image upload
       if (imageFiles.length === 0) {
         toast.error("Vui lòng tải lên ít nhất một hình ảnh")
@@ -179,15 +201,13 @@ const StepOne = () => {
 
       // Ensure selfManaged is boolean
       data.selfManaged = typeof data.selfManaged === "string" ? data.selfManaged === "true" : Boolean(data.selfManaged)
-      
+
       console.log("Submitting form data:", data)
       // Submit data - use the mutation directly
       createRoomMutation.mutate(data)
     } catch (error) {
       console.error("Error in form submission:", error)
       toast.error("Có lỗi xảy ra khi xử lý biểu mẫu. Vui lòng thử lại.")
-    } finally {
-      setLoading(false)
     }
   }
 
