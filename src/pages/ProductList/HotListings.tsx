@@ -225,7 +225,7 @@ const HotListings: React.FC<HotListingsProps> = ({
                             {savedRoomIds.includes(listing.id) ? (
                               <FaHeart className="text-danger" size={16} />
                             ) : (
-                              <FaRegHeart size={16} />
+                              <FaRegHeart size={16} className="text-dark" />
                             )}
                           </div>
 
@@ -241,7 +241,7 @@ const HotListings: React.FC<HotListingsProps> = ({
 
                           <Card.Body className="p-3">
                             <Card.Title
-                              className="text-truncate mb-2"
+                              className="text-truncate mb-2 text-dark"
                               style={{ fontSize: "0.95rem", fontWeight: "bold" }}
                             >
                               {listing.title}
