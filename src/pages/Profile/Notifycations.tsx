@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Container, Row, Col, Nav, Button } from "react-bootstrap";
-import Sidebar from "../MainPage/SidebarPersion";
+import Sidebar from "../MainPage/SidebarPerson";
 import "./Notifications.css";
 
 export default function Notifications() {

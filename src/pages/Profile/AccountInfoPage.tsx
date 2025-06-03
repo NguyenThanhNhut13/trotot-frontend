@@ -6,7 +6,7 @@ import { Row, Col, Form, Button, Modal, Spinner, Card } from "react-bootstrap"
 import { toast } from "react-toastify"
 import { FaLock, FaPhone, FaEnvelope, FaCheckCircle, FaExclamationCircle } from "react-icons/fa"
 import authApi from "../../apis/auth.api"
-import { SidebarPersonLayout } from "../MainPage/SidebarPersion"
+import { SidebarPersonLayout } from "../MainPage/SidebarPerson"
 import { useResponsive } from "../../store/hook"
 
 // Type for Form.Control elements in React-Bootstrap

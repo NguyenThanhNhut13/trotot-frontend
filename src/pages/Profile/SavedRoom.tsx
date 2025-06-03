@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Badge, Spinner } from "react-bootstrap";
-import Sidebar from "../MainPage/SidebarPersion";
+import Sidebar from "../MainPage/SidebarPerson";
 import { FaMapMarkerAlt, FaHeart } from "react-icons/fa";
 import { AppDispatch, RootState } from "../../store/store";
 import { fetchSavedRooms, removeSavedRoom } from "../../store/slices/savedRoomsSlice";

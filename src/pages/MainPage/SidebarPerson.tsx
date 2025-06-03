@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import { Button, Offcanvas } from "react-bootstrap"
 import { useLocation, useNavigate } from "react-router-dom"
-import { FaUser, FaIdCard, FaHeart, FaBell, FaCommentAlt, FaBars, FaChevronRight } from "react-icons/fa"
+import { FaUser, FaIdCard, FaHeart, FaBell, FaCommentAlt, FaBars, FaChevronRight, FaTimes } from "react-icons/fa"
 import { useResponsive } from "../../store/hook"
 
 interface SidebarPersonProps {
@@ -67,11 +67,33 @@ const SidebarPerson = ({ show = true, onHide, variant = "fixed" }: SidebarPerson
     >
       {/* Header */}
       <div
-        className="border-bottom p-3"
+        className="border-bottom p-3 position-relative"
         style={{
           background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
         }}
       >
+        {/* Close button for mobile */}
+        {variant === "offcanvas" && (
+          <Button
+            variant="link"
+            className="position-absolute top-0 end-0 mt-2 me-2 p-1"
+            onClick={onHide}
+            style={{
+              color: "#0046a8",
+              textDecoration: "none",
+              width: "32px",
+              height: "32px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: "50%",
+              background: "rgba(255,255,255,0.8)",
+            }}
+          >
+            <FaTimes size={14} />
+          </Button>
+        )}
+
         <h5 className="fw-bold text-center mb-0" style={{ color: "#0046a8" }}>
           Tài khoản của tôi
         </h5>
@@ -161,7 +183,7 @@ const SidebarPerson = ({ show = true, onHide, variant = "fixed" }: SidebarPerson
       <div className="border-top p-3 mt-auto">
         <Button
           variant="outline-danger"
-          className="w-100 d-flex align-items-center justify-content-center gap-2"
+          className="w-100 d-flex align-items-center justify-content-center gap-2 rounded-3"
           onClick={() => navigate("/logout")}
         >
           <span>Đăng xuất</span>
