@@ -1,16 +1,16 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Nav, Button, Spinner } from "react-bootstrap"
-import { FaBell, FaCheckDouble, FaFilter, FaSearch } from "react-icons/fa"
+import { Nav, Button, Spinner, Form, InputGroup } from "react-bootstrap"
+import { FaBell, FaCheckDouble, FaFilter, FaSearch, FaTimes } from "react-icons/fa"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useResponsive } from "../../store/hook"
-import "./Notifications.css"
 import { SidebarPersonLayout } from "../MainPage/SidebarPerson"
 
 export default function NotificationsPage() {
   const [activeTab, setActiveTab] = useState("all")
   const [loading, setLoading] = useState(false)
+  const [showSearch, setShowSearch] = useState(false)
   const { isMobile, isTablet } = useResponsive()
   const navigate = useNavigate()
   const location = useLocation()
@@ -28,208 +28,217 @@ export default function NotificationsPage() {
     setActiveTab(tab)
   }
 
+  const tabs = [
+    { key: "all", label: "Tất cả" },
+    { key: "activity", label: "Hoạt động" },
+    { key: "transaction", label: "Giao dịch" },
+    { key: "promotion", label: "Khuyến mãi" },
+    { key: "account", label: "Tài khoản" },
+  ]
+
   return (
     <SidebarPersonLayout>
-      <div className="d-flex flex-column h-100">
+      <div
+        className="d-flex flex-column h-100"
+        style={{
+          background: "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
+          minHeight: "100vh",
+          margin: "-1rem",
+          padding: isMobile ? "1rem" : "1.5rem",
+        }}
+      >
         {/* Header */}
-        <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
-          <div>
-            <h2 className="fw-bold mb-1" style={{ color: "#0046a8" }}>
-              THÔNG BÁO
-            </h2>
-            <p className="text-muted mb-3 mb-md-0">Cập nhật thông báo trên Trọ Tốt</p>
-          </div>
-          <Button
-            variant="outline-primary"
-            className="d-flex align-items-center justify-content-center"
-            style={{
-              borderColor: "#0046a8",
-              color: "#0046a8",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "#0046a8"
-              e.currentTarget.style.color = "white"
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "transparent"
-              e.currentTarget.style.color = "#0046a8"
-            }}
-          >
-            <FaCheckDouble className="me-2" size={14} />
-            Đánh dấu đã đọc tất cả
-          </Button>
-        </div>
-
-        {/* Tabs and Search */}
-        <div className="notification-controls mb-3">
-          <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-            {/* Tabs */}
-            <div className={`notification-tabs ${isMobile ? "scrollable-tabs" : ""}`}>
-              <Nav variant="tabs" className="border-bottom-0">
-                <Nav.Item>
-                  <Nav.Link
-                    className={activeTab === "all" ? "active" : ""}
-                    onClick={() => handleTabSelect("all")}
-                    style={{
-                      color: activeTab === "all" ? "#0046a8" : "#6c757d",
-                      borderColor: activeTab === "all" ? "#0046a8" : "transparent",
-                      borderBottom: activeTab === "all" ? "2px solid #0046a8" : "none",
-                    }}
-                  >
-                    Tất cả
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link
-                    className={activeTab === "activity" ? "active" : ""}
-                    onClick={() => handleTabSelect("activity")}
-                    style={{
-                      color: activeTab === "activity" ? "#0046a8" : "#6c757d",
-                      borderColor: activeTab === "activity" ? "#0046a8" : "transparent",
-                      borderBottom: activeTab === "activity" ? "2px solid #0046a8" : "none",
-                    }}
-                  >
-                    Hoạt động Trọ
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link
-                    className={activeTab === "transaction" ? "active" : ""}
-                    onClick={() => handleTabSelect("transaction")}
-                    style={{
-                      color: activeTab === "transaction" ? "#0046a8" : "#6c757d",
-                      borderColor: activeTab === "transaction" ? "#0046a8" : "transparent",
-                      borderBottom: activeTab === "transaction" ? "2px solid #0046a8" : "none",
-                    }}
-                  >
-                    Giao dịch
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link
-                    className={activeTab === "promotion" ? "active" : ""}
-                    onClick={() => handleTabSelect("promotion")}
-                    style={{
-                      color: activeTab === "promotion" ? "#0046a8" : "#6c757d",
-                      borderColor: activeTab === "promotion" ? "#0046a8" : "transparent",
-                      borderBottom: activeTab === "promotion" ? "2px solid #0046a8" : "none",
-                    }}
-                  >
-                    Khuyến mãi
-                  </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                  <Nav.Link
-                    className={activeTab === "account" ? "active" : ""}
-                    onClick={() => handleTabSelect("account")}
-                    style={{
-                      color: activeTab === "account" ? "#0046a8" : "#6c757d",
-                      borderColor: activeTab === "account" ? "#0046a8" : "transparent",
-                      borderBottom: activeTab === "account" ? "2px solid #0046a8" : "none",
-                    }}
-                  >
-                    Tài khoản
-                  </Nav.Link>
-                </Nav.Item>
-              </Nav>
+        <div className="mb-3 mb-md-4">
+          <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+            <div className="mb-3 mb-md-0">
+              <h2
+                className="fw-bold mb-1"
+                style={{
+                  color: "#0046a8",
+                  fontSize: isMobile ? "1.5rem" : "2rem",
+                }}
+              >
+                THÔNG BÁO
+              </h2>
+              <p className="text-muted mb-0" style={{ fontSize: isMobile ? "0.85rem" : "1rem" }}>
+                Cập nhật thông báo trên Trọ Tốt
+              </p>
             </div>
 
-            {/* Search and Filter - Only on larger screens */}
-            {!isMobile && (
-              <div className="d-flex align-items-center gap-2 mt-3 mt-md-0">
-                <div className="position-relative">
-                  <input
-                    type="text"
-                    className="form-control"
-                    placeholder="Tìm thông báo..."
-                    style={{
-                      paddingLeft: "2.5rem",
-                      borderRadius: "8px",
-                      border: "1px solid #dee2e6",
-                    }}
-                  />
-                  <FaSearch
-                    className="position-absolute"
-                    style={{ left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "#6c757d" }}
-                  />
-                </div>
+            {/* Action buttons */}
+            <div className="d-flex align-items-center gap-2">
+              {isMobile && (
+                <Button
+                  variant="light"
+                  size="sm"
+                  className="d-flex align-items-center justify-content-center"
+                  onClick={() => setShowSearch(!showSearch)}
+                  style={{
+                    width: "36px",
+                    height: "36px",
+                    borderRadius: "8px",
+                    border: "1px solid #dee2e6",
+                  }}
+                >
+                  {showSearch ? <FaTimes size={14} /> : <FaSearch size={14} />}
+                </Button>
+              )}
+
+              <Button
+                variant="outline-primary"
+                size={isMobile ? "sm" : undefined}
+                className="d-flex align-items-center justify-content-center"
+                style={{
+                  borderColor: "#0046a8",
+                  color: "#0046a8",
+                  fontSize: isMobile ? "0.8rem" : "0.9rem",
+                  padding: isMobile ? "0.4rem 0.8rem" : "0.5rem 1rem",
+                }}
+              >
+                <FaCheckDouble className="me-1 me-md-2" size={isMobile ? 12 : 14} />
+                {isMobile ? "Đã đọc" : "Đánh dấu đã đọc tất cả"}
+              </Button>
+            </div>
+          </div>
+
+          {/* Mobile Search */}
+          {isMobile && showSearch && (
+            <div className="mt-3">
+              <InputGroup size="sm">
+                <InputGroup.Text style={{ backgroundColor: "#f8f9fa", border: "1px solid #dee2e6" }}>
+                  <FaSearch size={12} />
+                </InputGroup.Text>
+                <Form.Control type="text" placeholder="Tìm thông báo..." style={{ fontSize: "0.85rem" }} />
+                <Button variant="light" style={{ border: "1px solid #dee2e6" }}>
+                  <FaFilter size={12} />
+                </Button>
+              </InputGroup>
+            </div>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-3">
+          {isMobile ? (
+            // Mobile: Dropdown-style tabs
+            <div className="d-flex align-items-center gap-2 mb-3">
+              <Form.Select
+                size="sm"
+                value={activeTab}
+                onChange={(e) => handleTabSelect(e.target.value)}
+                style={{
+                  fontSize: "0.85rem",
+                  borderColor: "#0046a8",
+                  color: "#0046a8",
+                }}
+              >
+                {tabs.map((tab) => (
+                  <option key={tab.key} value={tab.key}>
+                    {tab.label}
+                  </option>
+                ))}
+              </Form.Select>
+            </div>
+          ) : (
+            // Desktop/Tablet: Regular tabs
+            <div className="bg-white rounded-3 shadow-sm p-2">
+              <Nav variant="pills" className="flex-nowrap">
+                {tabs.map((tab) => (
+                  <Nav.Item key={tab.key} className="flex-shrink-0">
+                    <Nav.Link
+                      className={`px-3 py-2 ${activeTab === tab.key ? "active" : ""}`}
+                      onClick={() => handleTabSelect(tab.key)}
+                      style={{
+                        color: activeTab === tab.key ? "white" : "#0046a8",
+                        backgroundColor: activeTab === tab.key ? "#0046a8" : "transparent",
+                        border: "none",
+                        borderRadius: "8px",
+                        fontSize: "0.9rem",
+                        fontWeight: "500",
+                        transition: "all 0.2s ease",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {tab.label}
+                    </Nav.Link>
+                  </Nav.Item>
+                ))}
+              </Nav>
+            </div>
+          )}
+
+          {/* Desktop Search */}
+          {!isMobile && (
+            <div className="d-flex justify-content-end mt-3">
+              <div className="d-flex align-items-center gap-2">
+                <InputGroup style={{ width: "300px" }}>
+                  <InputGroup.Text style={{ backgroundColor: "#f8f9fa", border: "1px solid #dee2e6" }}>
+                    <FaSearch size={14} />
+                  </InputGroup.Text>
+                  <Form.Control type="text" placeholder="Tìm thông báo..." style={{ fontSize: "0.9rem" }} />
+                </InputGroup>
                 <Button
                   variant="light"
                   className="d-flex align-items-center justify-content-center"
                   style={{
-                    borderRadius: "8px",
-                    border: "1px solid #dee2e6",
                     width: "40px",
                     height: "38px",
+                    borderRadius: "8px",
+                    border: "1px solid #dee2e6",
                   }}
                 >
                   <FaFilter size={14} />
                 </Button>
               </div>
-            )}
-          </div>
-
-          {/* Search on mobile - only visible on mobile */}
-          {isMobile && (
-            <div className="d-flex align-items-center gap-2 mt-3">
-              <div className="position-relative flex-grow-1">
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Tìm thông báo..."
-                  style={{
-                    paddingLeft: "2.5rem",
-                    borderRadius: "8px",
-                    border: "1px solid #dee2e6",
-                  }}
-                />
-                <FaSearch
-                  className="position-absolute"
-                  style={{ left: "0.75rem", top: "50%", transform: "translateY(-50%)", color: "#6c757d" }}
-                />
-              </div>
-              <Button
-                variant="light"
-                className="d-flex align-items-center justify-content-center"
-                style={{
-                  borderRadius: "8px",
-                  border: "1px solid #dee2e6",
-                  width: "40px",
-                  height: "38px",
-                }}
-              >
-                <FaFilter size={14} />
-              </Button>
             </div>
           )}
         </div>
 
         {/* Notification Content */}
-        <div className="notification-content bg-white rounded-3 shadow-sm flex-grow-1" style={{ overflow: "hidden" }}>
+        <div
+          className="bg-white rounded-3 shadow-sm flex-grow-1 d-flex flex-column"
+          style={{
+            minHeight: isMobile ? "400px" : "500px",
+            overflow: "hidden",
+          }}
+        >
           {loading ? (
-            <div className="d-flex flex-column align-items-center justify-content-center py-5">
+            <div className="d-flex flex-column align-items-center justify-content-center flex-grow-1 py-4">
               <Spinner
                 animation="border"
-                variant="primary"
-                style={{ color: "#0046a8", width: "3rem", height: "3rem" }}
+                style={{
+                  color: "#0046a8",
+                  width: isMobile ? "2rem" : "3rem",
+                  height: isMobile ? "2rem" : "3rem",
+                }}
               />
-              <p className="mt-3 text-muted">Đang tải thông báo...</p>
+              <p className="mt-3 text-muted mb-0" style={{ fontSize: isMobile ? "0.85rem" : "1rem" }}>
+                Đang tải thông báo...
+              </p>
             </div>
           ) : (
-            <div className="empty-notifications text-center py-5">
+            <div className="d-flex flex-column align-items-center justify-content-center flex-grow-1 p-4 text-center">
               <div
-                className="rounded-circle mx-auto mb-4 d-flex align-items-center justify-content-center"
+                className="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center"
                 style={{
-                  width: "120px",
-                  height: "120px",
+                  width: isMobile ? "80px" : "120px",
+                  height: isMobile ? "80px" : "120px",
                   background: "linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%)",
                 }}
               >
-                <FaBell size={48} style={{ color: "#0046a8" }} />
+                <FaBell size={isMobile ? 32 : 48} style={{ color: "#0046a8" }} />
               </div>
-              <h5 className="fw-bold mb-2">Không có thông báo nào</h5>
-              <p className="text-muted mb-0 px-4" style={{ maxWidth: "400px", margin: "0 auto" }}>
+              <h5 className="fw-bold mb-2" style={{ fontSize: isMobile ? "1.1rem" : "1.25rem" }}>
+                Không có thông báo nào
+              </h5>
+              <p
+                className="text-muted mb-0"
+                style={{
+                  fontSize: isMobile ? "0.85rem" : "1rem",
+                  maxWidth: isMobile ? "280px" : "400px",
+                  lineHeight: "1.5",
+                }}
+              >
                 Hiện tại, bạn chưa có thông báo nào. Thông báo sẽ xuất hiện khi có cập nhật mới.
               </p>
             </div>

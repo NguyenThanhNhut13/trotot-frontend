@@ -426,7 +426,7 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({
 
         {/* Main Content */}
         <div className="flex-grow-1 overflow-auto">
-          <div className="px-3 p-md-4">{children}</div>
+          <div className="px-3 py-4">{children}</div>
         </div>
       </div>
     </div>
