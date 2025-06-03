@@ -1,21 +1,35 @@
-import exp from "constants";
 import http from "../utils/http";
 
-export const API_URL = "https://trotot-rasa-chatbox.silenthero.xyz/webhooks/rest/webhook"; 
-// body {
-//   "sender": "user123",
-//   "message": "Tìm phòng trọ dưới 5 tr"
-// }
+export const API_URL = "https://trotot-backend-chatbot-service-1-0.onrender.com/chat"; 
 
-export interface ChatboxAIResponse {
-    recipient_id: string;
-    text: string;
+export interface ChatbotRoom {
+  id: number;
+  title: string;
+  price: number;
+  area: number;
+  roomType: string;
+  imageUrls: string[];
+  district: string;
+  province: string;
+}
+
+export interface ChatbotResponse {
+  response: {
+    summary: string;
+    raw_data?: {
+      content: ChatbotRoom[];
+      page: number;
+      size: number;
+      totalElements: number;
+      totalPages: number;
+      last: boolean;
+    }
+  }
 }
 
 const chatboxAI = {
-    sendMessage(sender: string, message: string) {
-        return http.post<ChatboxAIResponse[]>(API_URL, { 
-            sender,
+    sendMessage(message: string) {
+        return http.post<ChatbotResponse>(API_URL, { 
             message
         });
     }
