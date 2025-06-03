@@ -551,7 +551,7 @@ export default function ManagerPost() {
 
   return (
     <SidebarLayout>
-      <Container fluid className="p-3">
+      <Container fluid className="px-3">
         <div className="d-flex flex-column gap-3">
           {/* Header */}
           <div className="d-flex justify-content-between align-items-center">

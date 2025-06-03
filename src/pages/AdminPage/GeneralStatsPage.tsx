@@ -234,7 +234,10 @@ const GeneralStatsPage = () => {
         {/* Header */}
         <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
           <div>
-            <h2 className="text-primary fw-bold mb-1 d-flex align-items-center">
+            <h2
+              className="fw-bold mb-1 d-flex align-items-center"
+              style={{ color: "#0046a8" }}
+            >
               <FaChartLine className="me-2" />
               THỐNG KÊ TỔNG QUAN
             </h2>

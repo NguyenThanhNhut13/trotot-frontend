@@ -425,8 +425,8 @@ export const SidebarLayout: React.FC<SidebarLayoutProps> = ({
         <AppSidebar variant="offcanvas" show={showMobileSidebar} onHide={() => setShowMobileSidebar(false)} />
 
         {/* Main Content */}
-        <div className="flex-grow-1 overflow-auto w-100">
-          {children}
+        <div className="flex-grow-1 overflow-auto">
+          <div className="px-3 p-md-4">{children}</div>
         </div>
       </div>
     </div>
