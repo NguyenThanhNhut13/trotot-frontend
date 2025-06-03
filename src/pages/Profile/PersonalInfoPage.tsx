@@ -107,7 +107,7 @@ const PersonalInfoPage = () => {
 
   return (
     <SidebarPersonLayout>
-      <div className="py-3 py-md-4">
+      <div className="px-3">
         <h2 className="fw-bold mb-2" style={{ color: "#0046a8", fontSize: isMobile ? "1.5rem" : "1.75rem" }}>
           THÔNG TIN CÁ NHÂN
         </h2>
