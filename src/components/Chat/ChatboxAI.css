@@ -452,7 +452,7 @@
 
 @media (min-width: 993px) {
   .chatbox-container {
-    transition: width 0.3s ease;
+    transition: width 0.3s ease, height 0.3s ease;
   }
 
   .message:hover {

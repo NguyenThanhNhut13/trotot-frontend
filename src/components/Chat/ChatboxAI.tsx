@@ -12,14 +12,14 @@ import {
   FaArrowRight,
   FaRegLightbulb,
   FaMapMarkerAlt,
-  FaRegClock,
   FaExpand,
   FaCompress,
 } from "react-icons/fa"
 import chatboxAI from "../../apis/chatboxAI.api"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import "./ChatboxAI.css"
 import { useResponsive } from "../../store/hook"
+import ReactMarkdown from "react-markdown"
 
 interface Message {
   sender: "user" | "bot"
@@ -41,39 +41,18 @@ const ChatboxAI: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const navigate = useNavigate()
-  const location = useLocation()
   const { isMobile, isTablet, isDesktop } = useResponsive()
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "Xin chào! Tôi là trợ lý ảo Trọ Tốt. Tôi có thể giúp bạn tìm phòng trọ phù hợp. Bạn có thể chọn một gợi ý hoặc nhập câu hỏi của riêng bạn.",
+      text: "Xin chào! Tôi là trợ lý ảo Trọ Tốt. Tôi có thể giúp bạn tìm phòng trọ phù hợp. Bạn có thể hỏi về giá cả, vị trí, diện tích hoặc các yêu cầu khác. Ví dụ: 'Tìm phòng trọ giá dưới 2 triệu ở quận Gò Vấp, TP.HCM'.",
       timestamp: new Date(),
     },
   ])
   const [inputValue, setInputValue] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
-
-  // Dynamic suggestions based on current page
-  const getSuggestions = () => {
-    const baseSuggestions = [
-      "Tìm trọ ở Bình Thạnh",
-      "Tìm phòng trọ có wifi",
-      "Tìm trọ gần bệnh viện",
-      "Tìm trọ giá dưới 5 triệu",
-    ]
-
-    // Add contextual suggestions based on current page
-    if (location.pathname.includes("/phong-tro")) {
-      return [...baseSuggestions, "Có phòng tương tự không?", "Phòng này có gần trung tâm không?"]
-    }
-
-    return baseSuggestions
-  }
-
-  const suggestions = getSuggestions()
 
   useEffect(() => {
     scrollToBottom()
@@ -104,18 +83,8 @@ const ChatboxAI: React.FC = () => {
     setIsExpanded(!isExpanded)
   }
 
-  const handleSuggestionClick = (suggestion: string) => {
-    handleSendMessage(suggestion)
-  }
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value)
-    // Show typing indicator
-    if (e.target.value && !isTyping) {
-      setIsTyping(true)
-    } else if (!e.target.value) {
-      setIsTyping(false)
-    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -123,28 +92,7 @@ const ChatboxAI: React.FC = () => {
     if (inputValue.trim()) {
       handleSendMessage(inputValue)
       setInputValue("")
-      setIsTyping(false)
     }
-  }
-
-  const parseRoomData = (text: string): RoomSuggestion[] => {
-    // Match pattern like: ID: 67 – 🏠 Phong tro moi – 1,000,000đ – 25.0m² – Ảnh: https://...jpg
-    const roomRegex = /ID: (\d+) – 🏠 (.+?) – ([\d,]+đ) – ([\d.]+m²) – Ảnh: (.+?)(?=\n|$)/g
-    const rooms: RoomSuggestion[] = []
-    let match
-
-    while ((match = roomRegex.exec(text)) !== null) {
-      rooms.push({
-        id: Number.parseInt(match[1], 10),
-        title: match[2],
-        price: match[3],
-        area: match[4],
-        imageUrl: match[5],
-        location: "Quận " + Math.floor(Math.random() * 12 + 1), // Mock location data
-      })
-    }
-
-    return rooms
   }
 
   const handleSendMessage = async (message: string) => {
@@ -222,19 +170,6 @@ const ChatboxAI: React.FC = () => {
             },
           ])
         }
-      } else if (Array.isArray(response.data) && (response.data as any[]).length > 0) {
-        // Legacy format: array of messages
-        const newBotMessages: Message[] = (response.data as any[]).map((item: any) => {
-          const roomSuggestions = parseRoomData(item.text || "")
-          return {
-            sender: "bot",
-            text: item.text || "",
-            timestamp: new Date(),
-            rooms: roomSuggestions.length > 0 ? roomSuggestions : undefined,
-          }
-        })
-
-        setMessages((prev) => [...prev, ...newBotMessages])
       } else {
         // Fallback for unknown format
         const botText = typeof response.data === "string" ? response.data : JSON.stringify(response.data)
@@ -380,8 +315,21 @@ const ChatboxAI: React.FC = () => {
                     )}
                     {message.timestamp && <span className="message-time">{formatTime(message.timestamp)}</span>}
                   </div>
-
-                  <p>{message.text}</p>
+                  {message.sender === "bot" ? (
+                    <ReactMarkdown
+                      components={{
+                        p: (props) => <p style={{ marginBottom: 0 }} {...props} />,
+                        ul: (props) => <ul style={{ marginBottom: 0, paddingLeft: 18 }} {...props} />,
+                        li: (props) => <li style={{ marginBottom: 0 }} {...props} />,
+                        strong: (props) => <strong {...props} />,
+                        em: (props) => <em {...props} />,
+                      }}
+                    >
+                      {message.text}
+                    </ReactMarkdown>
+                  ) : (
+                    <p>{message.text}</p>
+                  )}
 
                   {message.rooms && message.rooms.length > 0 && (
                     <div className="room-suggestions">
@@ -425,37 +373,10 @@ const ChatboxAI: React.FC = () => {
                 </div>
               </div>
             )}
-
-            {isTyping && !isLoading && (
-              <div className="user-typing">
-                <FaRegClock size={10} className="me-1" />
-                <span>Đang nhập...</span>
-              </div>
-            )}
-
             <div ref={messagesEndRef} />
           </Card.Body>
 
           <Card.Footer className="p-2 bg-light">
-            <div className="suggestions-container mb-2">
-              {suggestions.map((suggestion, index) => (
-                <Button
-                  key={index}
-                  variant="outline-primary"
-                  size="sm"
-                  className="me-2 mb-1 suggestion-btn"
-                  style={{
-                    borderColor: "#0046a8",
-                    color: "#0046a8",
-                    fontSize: "0.75rem",
-                  }}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                >
-                  {suggestion}
-                </Button>
-              ))}
-            </div>
-
             <Form onSubmit={handleSubmit}>
               <InputGroup>
                 <Form.Control
