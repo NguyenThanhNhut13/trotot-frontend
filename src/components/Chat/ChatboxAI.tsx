@@ -13,6 +13,8 @@ import {
   FaRegLightbulb,
   FaMapMarkerAlt,
   FaRegClock,
+  FaExpand,
+  FaCompress,
 } from "react-icons/fa"
 import chatboxAI from "../../apis/chatboxAI.api"
 import { useNavigate, useLocation } from "react-router-dom"
@@ -37,6 +39,7 @@ interface RoomSuggestion {
 
 const ChatboxAI: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const { isMobile, isTablet, isDesktop } = useResponsive()
@@ -91,6 +94,14 @@ const ChatboxAI: React.FC = () => {
 
   const toggleChat = () => {
     setIsOpen(!isOpen)
+    // Reset expanded state when closing
+    if (isOpen) {
+      setIsExpanded(false)
+    }
+  }
+
+  const toggleExpanded = () => {
+    setIsExpanded(!isExpanded)
   }
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -264,6 +275,35 @@ const ChatboxAI: React.FC = () => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
+  // Enhanced sizing with expansion support
+  const getChatDimensions = () => {
+    if (isMobile) {
+      return {
+        width: "calc(100% - 30px)",
+        height: "70vh",
+        bottom: "75px",
+        right: "15px",
+      }
+    } else if (isTablet) {
+      return {
+        width: "450px",
+        height: "500px",
+        bottom: "90px",
+        right: "20px",
+      }
+    } else {
+      // Desktop - expandable width
+      return {
+        width: isExpanded ? "650px" : "380px",
+        height: isExpanded ? "570px" :"500px",
+        bottom: "90px",
+        right: "20px",
+      }
+    }
+  }
+
+  const chatDimensions = getChatDimensions()
+
   return (
     <>
       {/* Chat Button */}
@@ -285,15 +325,7 @@ const ChatboxAI: React.FC = () => {
 
       {/* Chat Window */}
       {isOpen && (
-        <Card
-          className="chatbox-container"
-          style={{
-            width: isMobile ? "calc(100% - 30px)" : isTablet ? "400px" : "380px",
-            height: isMobile ? "70vh" : "500px",
-            bottom: isMobile ? "75px" : "90px",
-            right: isMobile ? "15px" : "20px",
-          }}
-        >
+        <Card className="chatbox-container" style={chatDimensions}>
           <Card.Header
             className="d-flex justify-content-between align-items-center text-white"
             style={{
@@ -305,9 +337,28 @@ const ChatboxAI: React.FC = () => {
               <FaRobot className="me-2" />
               <span className="fw-bold">Trợ lý tìm phòng AI</span>
             </div>
-            <Button variant="link" className="p-0 text-white" onClick={toggleChat} style={{ opacity: 0.9 }}>
-              <FaTimes />
-            </Button>
+            <div className="d-flex align-items-center gap-2">
+              {/* Expand/Collapse button - only show on desktop */}
+              {isDesktop && (
+                <Button
+                  variant="link"
+                  className="p-0 text-white"
+                  onClick={toggleExpanded}
+                  style={{ opacity: 0.9, fontSize: "16px" }}
+                  title={isExpanded ? "Thu nhỏ" : "Mở rộng"}
+                >
+                  {isExpanded ? <FaCompress /> : <FaExpand />}
+                </Button>
+              )}
+              <Button
+                variant="link"
+                className="p-0 text-white"
+                onClick={toggleChat}
+                style={{ opacity: 0.9, fontSize: "18px" }}
+              >
+                <FaTimes />
+              </Button>
+            </div>
           </Card.Header>
 
           <Card.Body className="chatbox-messages">
