@@ -28,9 +28,7 @@ const Header = () => {
     if (refreshToken) {
       dispatch(logout({ refreshToken }))
     }
-    setTimeout(() => {
-      window.location.reload()
-    }, 5000)
+    toast.success("Đăng xuất thành công!")
   }
 
   // Hàm kiểm tra đăng nhập trước khi cho đăng trọ
